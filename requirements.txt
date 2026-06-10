@@ -1,0 +1,6 @@
+zeroconf>=0.132.0
+cryptography>=42.0.0
+pytest>=8.0.0
+pytest-cov>=4.1.0
+black>=24.0.0
+flake8>=7.0.0
