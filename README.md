@@ -92,9 +92,10 @@ To ensure structured progress, the development team follows the Agile framework:
 
 ### Team Assignments
 *   **Contributor A:** Implement and test the SSS core (`sss.py`) including finite field arithmetic, polynomial evaluation, and Lagrange interpolation.
-*   **Contributor B:** Implement the secure channel logic (`channel.py`) including X25519 ECDH key exchange and AES-GCM encryption wrapper.
-*   **Contributor C:** Implement peer discovery and transmission (`discovery.py`, `transfer.py`) including mDNS broadcasting/browsing and TCP socket framing.
-*   **Contributor D:** Develop CLI integration (`split.py`, `recover.py`) to connect modules, orchestrate CLI arguments, and handle run-time user experience.
+*   **Contributor B:** Implement the cryptographic handshake (`channel.py`) using X25519 ECDH key exchange and session key derivation.
+*   **Contributor C:** Implement the AES-GCM encryption wrapper and socket message framing (`transfer.py`) to pack, encrypt, decrypt, and unpack network payloads.
+*   **Contributor D:** Implement mDNS discovery (`discovery.py`) using the Zeroconf protocol to register and resolve LAN peer addresses.
+*   **Contributor E:** Develop CLI orchestration (`split.py`, `recover.py`, `__main__.py`) to tie all components together, parse arguments, and handle system runtime execution flow.
 
 ### Roadmap
 *   **Week 1 (Onboarding and Setup):** Read reference cryptography material, configure repository structure, set up pre-commit hooks, and verify the testing environment.
