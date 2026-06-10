@@ -90,20 +90,51 @@ To ensure structured progress, the development team follows the Agile framework:
 
 ## 5. Contributor Roles and Timeline
 
-### Team Assignments
-*   **Contributor A:** Implement and test the SSS core (`sss.py`) including finite field arithmetic, polynomial evaluation, and Lagrange interpolation.
-*   **Contributor B:** Implement the cryptographic handshake (`channel.py`) using X25519 ECDH key exchange and session key derivation.
-*   **Contributor C:** Implement the AES-GCM encryption wrapper and socket message framing (`transfer.py`) to pack, encrypt, decrypt, and unpack network payloads.
-*   **Contributor D:** Implement mDNS discovery (`discovery.py`) using the Zeroconf protocol to register and resolve LAN peer addresses.
-*   **Contributor E:** Develop CLI orchestration (`split.py`, `recover.py`, `__main__.py`) to tie all components together, parse arguments, and handle system runtime execution flow.
+### Mentee Track Assignments
+*   **Mentee A (SSS Core — `crypto/sss.py`):** Responsible for the mathematical core, finite field GF(256) arithmetic, and Lagrange interpolation.
+*   **Mentee B (Channel Encryption — `crypto/channel.py`):** Responsible for ephemeral key agreement (X25519 ECDH) and session key derivation.
+*   **Mentee C (Peer Discovery — `network/discovery.py`):** Responsible for mDNS service publication and network service browsing using Zeroconf.
+*   **Mentee D (Transfer Layer — `network/transfer.py`):** Responsible for socket connections, TCP data transmission, and packet framing.
+*   **Mentee E (CLI & Testing — `cli/` + testing infrastructure):** The integration and testing lead responsible for CLI subcommands, testing scaffolding, pre-commit hooks, and integration verification.
 
-### Roadmap
-*   **Week 1 (Onboarding and Setup):** Read reference cryptography material, configure repository structure, set up pre-commit hooks, and verify the testing environment.
-*   **Week 2 (SSS Implementation):** Complete finite field arithmetic and base SSS logic in `sss.py`, backed by unit tests for threshold edge cases.
-*   **Week 3 (Secure Channels & Networking):** Complete X25519 ECDH handshake, AES-GCM integration, mDNS announcement, and basic TCP socket transmissions.
-*   **Week 4 (CLI Integration & End-to-End Flow):** Integrate CLI commands for `split` and `recover`, and perform initial end-to-end local network testing.
-*   **Week 5 (Hardening and Optimization):** Implement error handling, handle peer disconnection scenarios, set socket timeouts, and test across different operating systems (Linux, macOS).
-*   **Week 6 (Documentation and Validation):** Complete documentation, write final integration tests, execute a live demonstration on a local network, freeze the codebase, and submit the project.
+### Detailed Project Roadmap (June 10 — August 20+)
+
+#### Weeks 1-2 (June 10 - June 22) — Structured Learning & Concrete Deliverables
+*   **Mentee A:** Write a 1-page explanation of Lagrange interpolation over GF(256) in own words, and implement GF(256) addition and multiplication from scratch (no external libraries).
+*   **Mentee B:** Write a working X25519 key exchange between two local processes, derive a shared secret, and print it to the console.
+*   **Mentee C:** Establish mDNS service announcement and browsing using the `zeroconf` library (tested with one terminal announcing and another discovering).
+*   **Mentee D:** Implement a length-prefixed TCP socket framing mechanism to transmit and receive arbitrary byte blobs exactly.
+*   **Mentee E:** Setup the repository structure, pre-commit hooks, pytest configurations, and write 3 skeleton test files with initial placeholder tests.
+
+#### Weeks 3-4 (June 23 - July 6) — Core Module Implementation
+*   **Mentee A:** Implement full SSS split and reconstruct logic over GF(256) or a prime field. Add unit tests for edge cases (K=N, K=1, wrong shares, share tampering).
+*   **Mentee B:** Implement full ECDH handshake and AES-GCM encryption/decryption wrapper. Add tests for roundtrip correctness and invalid key failure handling.
+*   **Mentee C:** Complete mDNS announcement/browsing, incorporating service parameters (N and K threshold values) inside TXT records.
+*   **Mentee D:** Complete the TCP transfer layer (framed send/receive, handling partial reads/writes, and managing connection drops).
+*   **Mentee E:** Develop the integration test harness to allow two local processes to exchange data through the transfer layer.
+*   *Checkpoint (End of Week 4):* Every module must pass its own unit tests independently.
+
+#### Weeks 5-6 (July 7 - July 20) — Incremental Integration
+*   **Week 5:** Integrate Mentee B (Secure Channel) and Mentee D (Transfer Layer) to achieve encrypted share transfer between two processes. Mentee E writes the integration tests validating this.
+*   **Week 6:** Integrate Mentee A (SSS), Mentee B (Channel), and Mentee D (Transfer) to achieve a full crypto pipeline locally. Integrate Mentee C (Discovery) with Mentee D (Transfer) so that service discovery triggers the TCP connections automatically.
+
+#### Weeks 7-8 (July 21 - August 3) — CLI & End-to-End Execution
+*   **Mentee E (with all Mentees):**
+    *   Develop the `split` command (orchestrate discovery, perform handshakes, and distribute N shares to discovered peers).
+    *   Develop the `recover` command (announce self, listen for K connections, collect shares, and reconstruct the secret).
+    *   Set up end-to-end integration tests using Docker containers to simulate 3 separate machines on a LAN.
+    *   Incorporate error-handling for peer drops mid-transfer, duplicate peers, and incorrect K values.
+
+#### Weeks 9-10 (August 4 - August 17) — System Hardening & Polish
+*   Implement connection timeouts, automatic retry mechanisms, and corrupted share detection.
+*   Perform cross-platform testing (Linux and macOS).
+*   Add a `--verbose` flag and command-line progress indicators.
+*   Conduct a security review analyzing potential share leakage and the limits of unauthenticated ECDH handshakes (MITM vulnerability mitigation/documentation).
+
+#### Weeks 11+ (August 18 onward) — Documentation & Demos
+*   Finalize user documentation, architectural diagrams, and developer guides.
+*   Conduct a live demonstration of secret sharing across 3 physical machines on a local network.
+*   Perform a final codebase review, freeze the code, and submit the project.
 
 ---
 

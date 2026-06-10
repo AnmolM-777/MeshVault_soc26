@@ -1,9 +1,9 @@
 """
-Unit tests for Secure Channel module (channel.py).
+Unit tests for Secure Channel module (crypto/channel.py).
 """
 
 import pytest
-from meshvault.channel import SecureChannel
+from crypto.channel import SecureChannel
 
 def test_channel_import():
     """

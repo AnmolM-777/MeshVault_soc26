@@ -5,7 +5,8 @@ All notable changes to the MeshVault project will be documented in this file. Th
 ## [Unreleased]
 
 ### Added
-- Initial project structure scaffolding.
+- Initial project structure scaffolding (divided into top-level packages: `crypto/`, `network/`, `cli/`).
 - GitHub Actions workflow configuration for Continuous Integration (`.github/workflows/ci.yml`).
-- Repository configuration including `.gitignore`.
-- Formal, emoji-free `README.md` containing Agile project management guidelines, module specifications, timeline, and reading list.
+- Repository configuration including `.gitignore`, issue templates, and pull request template.
+- Formal, emoji-free `README.md` containing Agile project management guidelines, 5-mentee track assignments, detailed weekly deliverables, and reading resources.
+

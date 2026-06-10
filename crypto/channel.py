@@ -1,6 +1,10 @@
 """
 Secure Channel Encryption Module.
 Responsible for X25519 ECDH key exchange and AES-256-GCM symmetric encryption.
+
+Mentee B Deliverables:
+- Weeks 1-2: Write working X25519 key exchange between two processes, derive and print shared secret.
+- Weeks 3-4: Implement full ECDH handshake and AES-GCM encryption/decryption wrapper.
 """
 
 class SecureChannel:
@@ -9,7 +13,6 @@ class SecureChannel:
     """
     
     def __init__(self):
-        # Generate ephemeral private/public key pair
         self.private_key = None
         self.public_key = None
         self.shared_key = None
@@ -18,21 +21,16 @@ class SecureChannel:
         """
         Generates an X25519 private/public key pair.
         
-        Returns:
-            The serialized public key bytes to be sent to the peer.
+        Mentee B Weeks 1-2 Deliverable.
         """
-        # TODO: Generate X25519 private key and return serialized public key
+        # TODO: Generate X25519 key pair and return public key bytes
         raise NotImplementedError("generate_key_pair has not been implemented yet.")
 
     def compute_shared_secret(self, peer_public_key_bytes: bytes) -> bytes:
         """
         Computes the shared symmetric key using peer's public key.
         
-        Args:
-            peer_public_key_bytes: The serialized X25519 public key of the peer.
-            
-        Returns:
-            The derived shared key bytes.
+        Mentee B Weeks 1-2 Deliverable.
         """
         # TODO: Compute Diffie-Hellman shared secret and derive session key (HKDF)
         raise NotImplementedError("compute_shared_secret has not been implemented yet.")
@@ -41,11 +39,7 @@ class SecureChannel:
         """
         Encrypts a message using the derived shared key with AES-256-GCM.
         
-        Args:
-            plaintext: Raw bytes message to encrypt.
-            
-        Returns:
-            The ciphertext containing the IV/nonce, ciphertext, and auth tag.
+        Mentee B Weeks 3-4 Deliverable.
         """
         # TODO: Encrypt using AES-GCM
         raise NotImplementedError("encrypt_message has not been implemented yet.")
@@ -54,11 +48,7 @@ class SecureChannel:
         """
         Decrypts an AES-256-GCM encrypted message.
         
-        Args:
-            ciphertext: Encrypted message bytes.
-            
-        Returns:
-            Decrypted raw bytes message.
+        Mentee B Weeks 3-4 Deliverable.
         """
         # TODO: Decrypt using AES-GCM
         raise NotImplementedError("decrypt_message has not been implemented yet.")

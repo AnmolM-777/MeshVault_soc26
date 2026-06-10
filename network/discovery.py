@@ -1,6 +1,10 @@
 """
 Peer Discovery Module.
 Uses Zeroconf (mDNS) to advertise and browse for MeshVault instances on the LAN.
+
+Mentee C Deliverables:
+- Weeks 1-2: Set up simple mDNS service advertisement and browsing using python-zeroconf.
+- Weeks 3-4: Implement full mDNS announce/browse with metadata (N, K parameters inside TXT records).
 """
 
 from typing import List, Dict
@@ -15,30 +19,23 @@ class PeerDiscovery:
         self.zeroconf = None
         self.service_info = None
 
-    def advertise_service(self, name: str, port: int) -> None:
+    def advertise_service(self, name: str, port: int, metadata: Dict[str, str] = None) -> None:
         """
-        Publishes the local peer service over mDNS.
+        Publishes the local peer service over mDNS with optional TXT records.
         
-        Args:
-            name: Unique name for the local peer.
-            port: Port the local TCP receiver is listening on.
+        Mentee C Weeks 1-4 Deliverable.
         """
-        # TODO: Initialize Zeroconf and register _meshvault._tcp.local service
+        # TODO: Advertise service containing metadata (e.g., threshold K, total N)
         raise NotImplementedError("advertise_service has not been implemented yet.")
 
     def find_peers(self, timeout_seconds: float = 5.0) -> List[Dict]:
         """
-        Discovers active MeshVault services on the LAN.
+        Discovers active MeshVault services on the LAN and reads metadata.
         
-        Args:
-            timeout_seconds: Duration to wait for peers.
-            
-        Returns:
-            A list of dictionaries containing peer details (IP address, port, name).
+        Mentee C Weeks 1-4 Deliverable.
         """
-        # TODO: Browse for _meshvault._tcp.local services and return resolved peer targets
+        # TODO: Browse and parse peer properties
         raise NotImplementedError("find_peers has not been implemented yet.")
-
 
     def stop(self) -> None:
         """
