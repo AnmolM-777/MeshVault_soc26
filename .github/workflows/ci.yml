@@ -39,5 +39,7 @@ jobs:
         flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Run Tests with Pytest and Coverage
+      env:
+        PYTHONPATH: .
       run: |
         pytest --cov=. --cov-report=term-missing
