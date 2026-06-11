@@ -8,10 +8,11 @@ Mentee E Deliverables:
 - Weeks 7-8: Build full CLI command coordination for 'recover'.
 """
 
+
 def execute_recover(threshold_k: int) -> bytes:
     """
     Executes the secret recovery operation.
-    
+
     Mentee E Weeks 7-8 Deliverable.
     """
     # TODO: Implement recover orchestration

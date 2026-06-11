@@ -9,20 +9,23 @@ Mentee C Deliverables:
 
 from typing import List, Dict
 
+
 class PeerDiscovery:
     """
     Registers the local service and browses for remote MeshVault peers.
     """
-    
+
     def __init__(self, service_type: str = "_meshvault._tcp.local."):
         self.service_type = service_type
         self.zeroconf = None
         self.service_info = None
 
-    def advertise_service(self, name: str, port: int, metadata: Dict[str, str] = None) -> None:
+    def advertise_service(
+        self, name: str, port: int, metadata: Dict[str, str] = None
+    ) -> None:
         """
         Publishes the local peer service over mDNS with optional TXT records.
-        
+
         Mentee C Weeks 1-4 Deliverable.
         """
         # TODO: Advertise service containing metadata (e.g., threshold K, total N)
@@ -31,7 +34,7 @@ class PeerDiscovery:
     def find_peers(self, timeout_seconds: float = 5.0) -> List[Dict]:
         """
         Discovers active MeshVault services on the LAN and reads metadata.
-        
+
         Mentee C Weeks 1-4 Deliverable.
         """
         # TODO: Browse and parse peer properties

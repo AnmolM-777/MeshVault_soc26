@@ -8,10 +8,11 @@ Mentee E Deliverables:
 - Weeks 7-8: Build full CLI command coordination for 'split'.
 """
 
+
 def execute_split(secret: bytes, threshold_k: int, shares_n: int) -> None:
     """
     Executes the secret split operation.
-    
+
     Mentee E Weeks 7-8 Deliverable.
     """
     # TODO: Implement split orchestration
