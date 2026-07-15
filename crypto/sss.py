@@ -8,7 +8,7 @@ Mentee A Deliverables:
 """
 
 from typing import List, Tuple
-
+import secrets
 
 def gf256_add(a: int, b: int) -> int:
     """
@@ -16,8 +16,8 @@ def gf256_add(a: int, b: int) -> int:
 
     Mentee A Weeks 1-2 Deliverable.
     """
-    # TODO: Implement GF(256) addition
-    raise NotImplementedError("gf256_add has not been implemented yet.")
+    return a ^ b
+   
 
 
 def gf256_multiply(a: int, b: int) -> int:
@@ -26,20 +26,85 @@ def gf256_multiply(a: int, b: int) -> int:
 
     Mentee A Weeks 1-2 Deliverable.
     """
-    # TODO: Implement GF(256) multiplication
-    raise NotImplementedError("gf256_multiply has not been implemented yet.")
+    
+
+    # Convert integer to polynomial (list of exponents)
+    def int_to_poly(num):
+        poly = []
+        power = 0
+
+        while num > 0:
+            if num % 2 == 1:
+                poly.append(power)
+            num //= 2
+            power += 1
+
+        return poly
+
+    # Multiply two polynomials
+    def multiply_poly(p1, p2):
+        result = []
+
+        for x in p1:
+            for y in p2:
+                degree = x + y
+
+                # XOR rule:
+                # If the term already exists, remove it.
+                # Otherwise, add it.
+                if degree in result:
+                    result.remove(degree)
+                else:
+                    result.append(degree)
+
+        return result
+
+    # Reduce using x^8 + x^4 + x^3 + x + 1
+    def reduce_poly(poly):
+        while max(poly, default=0) >= 8:
+            highest = max(poly)
+            poly.remove(highest)
+
+            shift = highest - 8
+
+            for term in [4, 3, 1, 0]:
+                value = term + shift
+
+                if value in poly:
+                    poly.remove(value)
+                else:
+                    poly.append(value)
+
+        return poly
+
+    # Convert polynomial back to integer
+    def poly_to_int(poly):
+        value = 0
+
+        for power in poly:
+            value += 2 ** power
+
+        return value 
+
+    p1 = int_to_poly(a)
+    p2 = int_to_poly(b)
+
+    product = multiply_poly(p1, p2)
+    reduced = reduce_poly(product)
+
+    return poly_to_int(reduced)
 
 
-def split_secret(
-    secret: bytes, threshold_k: int, shares_n: int
-) -> List[Tuple[int, bytes]]:
+def split_secret(secret: bytes, threshold_k: int, shares_n: int) -> List[Tuple[int, bytes]]:
     """
     Splits the secret into N shares, such that any K shares can reconstruct it.
 
     Mentee A Weeks 3-4 Deliverable.
     """
-    # TODO: Implement polynomial generation and evaluation over GF(256)
+    # TODO: Implement Lagrange interpolation to recover the secret
     raise NotImplementedError("split_secret has not been implemented yet.")
+    
+
 
 
 def reconstruct_secret(shares: List[Tuple[int, bytes]]) -> bytes:
