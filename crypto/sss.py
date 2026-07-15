@@ -95,6 +95,20 @@ def gf256_multiply(a: int, b: int) -> int:
     return poly_to_int(reduced)
 
 
+def generate_polynomial(secret_byte: int, degree: int):
+        """
+        Generates a random polynomial whose constant term is the secret.
+        """
+        
+        polynomial = [secret_byte]
+
+        for i in range(degree):
+            random_coefficient = secrets.randbelow(256)
+            polynomial.append(random_coefficient)
+
+        return polynomial
+
+
 def split_secret(secret: bytes, threshold_k: int, shares_n: int) -> List[Tuple[int, bytes]]:
     """
     Splits the secret into N shares, such that any K shares can reconstruct it.
