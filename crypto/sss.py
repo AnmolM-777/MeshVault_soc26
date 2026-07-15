@@ -101,7 +101,6 @@ def split_secret(secret: bytes, threshold_k: int, shares_n: int) -> List[Tuple[i
 
     Mentee A Weeks 3-4 Deliverable.
     """
-    # TODO: Implement Lagrange interpolation to recover the secret
     raise NotImplementedError("split_secret has not been implemented yet.")
     
 
