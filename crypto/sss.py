@@ -115,10 +115,35 @@ def split_secret(secret: bytes, threshold_k: int, shares_n: int) -> List[Tuple[i
 
     Mentee A Weeks 3-4 Deliverable.
     """
-    raise NotImplementedError("split_secret has not been implemented yet.")
+    degree = threshold_k - 1
+    all_polynomials = []
+
+    for secret_byte in secret:
+        polynomial = generate_polynomial(secret_byte, degree)
+        all_polynomials.append(polynomial)
+
+    shares = []
+
+    for x in range(1, shares_n + 1):
+        share_bytes = []
+
+        for polynomial in all_polynomials:
+            y = 0
+
+            for power, coefficient in enumerate(polynomial):
+                x_power = 1
+                for _ in range(power):
+                    x_power = gf256_multiply(x_power, x)
+
+                term = gf256_multiply(coefficient, x_power)
+                y = gf256_add(y, term)
+
+            share_bytes.append(y)
+
+        shares.append((x, bytes(share_bytes)))
+
+    return shares
     
-
-
 
 def reconstruct_secret(shares: List[Tuple[int, bytes]]) -> bytes:
     """
