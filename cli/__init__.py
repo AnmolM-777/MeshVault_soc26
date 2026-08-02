@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import socket
 
 from crypto.channel import SecureChannel
@@ -41,3 +42,8 @@ def execute_recover(threshold_k: int, listen_port: int = 5000) -> bytes:
 
     server_sock.close()
     return reconstruct_secret(shares)
+=======
+"""
+CLI package containing CLI interaction and high-level command orchestrators.
+"""
+>>>>>>> 30c7fee7ab3dec7e252f0d92a24fcce382a46ce7
