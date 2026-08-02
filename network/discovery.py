@@ -99,13 +99,11 @@ class PeerDiscovery:
         """
         if self.zeroconf is None:
             self.zeroconf = Zeroconf()
-        
         listener = PeerListener()
-        
         browser = ServiceBrowser(
-        self.zeroconf,
-        self.service_type,
-        listener
+            self.zeroconf,
+            self.service_type,
+            listener
         )
 
         time.sleep(timeout_seconds)
@@ -116,14 +114,13 @@ class PeerDiscovery:
         Stops advertising and browsing, cleaning up Zeroconf resources.
         """
         if self.zeroconf is not None:
-
-        # Remove advertised service (if any)
+            # Remove advertised service (if any)
             if self.service_info is not None:
                 self.zeroconf.unregister_service(self.service_info)
 
-        # Close Zeroconf
-        self.zeroconf.close()
+            # Close Zeroconf
+            self.zeroconf.close()
 
-        # Reset references
-        self.zeroconf = None
-        self.service_info = None
+            # Reset references
+            self.zeroconf = None
+            self.service_info = None
