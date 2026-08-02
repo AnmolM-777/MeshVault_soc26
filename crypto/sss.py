@@ -16,8 +16,7 @@ def gf256_add(a: int, b: int) -> int:
 
     Mentee A Weeks 1-2 Deliverable.
     """
-    # TODO: Implement GF(256) addition
-    raise NotImplementedError("gf256_add has not been implemented yet.")
+    return a^b
 
 
 def gf256_multiply(a: int, b: int) -> int:
@@ -26,8 +25,22 @@ def gf256_multiply(a: int, b: int) -> int:
 
     Mentee A Weeks 1-2 Deliverable.
     """
-    # TODO: Implement GF(256) multiplication
-    raise NotImplementedError("gf256_multiply has not been implemented yet.")
+    #Based on Russian Peasant Multiplication idea
+    result= 0
+    while b:                
+        if b&1:
+            result^=a
+        a<<=1
+        if a&256:
+            a^=283
+        b>>=1
+    return a&255    
+         
+def poly_eval(coeffs: List[int], x: int)
+    result = 0
+    for coeff in reversed(coeffs):
+        result = (result gf256_multiply x) gf256_add coeff
+    return result
 
 
 def split_secret(
@@ -38,8 +51,27 @@ def split_secret(
 
     Mentee A Weeks 3-4 Deliverable.
     """
-    # TODO: Implement polynomial generation and evaluation over GF(256)
-    raise NotImplementedError("split_secret has not been implemented yet.")
+    #Validation of inputs
+    if threshold_k>shares_n:
+        raise ValueError("Threshold k cannot be greater than total shares n")
+    
+    if not(1<=threshold_k<=255 and 1<=shares_n<=255 ):
+        raise ValueError("Threshold k and Shares n must be between 1 and 255")
+    
+    import os
+    #creating an empty list for storing shares
+    shares=[bytearray() for _ in range(shares_n)]
+    
+    for byte in secret:
+        #generating coefficients for polynomial
+        coeffs=[byte]+list(os.urandom(threshold_k - 1))
+        for i in range(shares_n):
+            x=i+1
+            result= poly_eval(coeff,x)
+            shares[i].append(result)
+
+    return [(i+1,s) for i,s in enumerate(shares)]  
+   
 
 
 def reconstruct_secret(shares: List[Tuple[int, bytes]]) -> bytes:
