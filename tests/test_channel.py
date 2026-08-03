@@ -6,6 +6,7 @@ import pytest
 from crypto.channel import SecureChannel
 
 
+
 def test_channel_import():
     """
     Ensure the SecureChannel class is defined and can be instantiated.

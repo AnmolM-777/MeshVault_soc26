@@ -1,0 +1,45 @@
+# Dockerized Multi-Node LAN Simulation CI job.
+#
+# Additive workflow — does not modify or replace the existing
+# .github/workflows/ci.yml (lint + unit-test matrix). This workflow
+# specifically builds the MeshVault image, brings up the multi-node
+# docker-compose simulation, and runs the Docker integration test defined
+# in tests/docker/test_multi_node_integration.py.
+
+name: Docker Multi-Node Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  docker-multi-node-simulation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and run multi-node simulation
+        run: |
+          docker compose build
+          # Brings up all 5 peer containers plus the test-runner
+          # container on the shared bridge network, then exits (and
+          # fails this step) as soon as test-runner exits, using its
+          # exit code as the step's exit code.
+          docker compose up \
+            --abort-on-container-exit \
+            --exit-code-from test-runner
+
+      - name: Show peer container logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v --remove-orphans
