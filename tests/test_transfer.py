@@ -7,9 +7,7 @@ from network.transfer import (
 )
 
 
-# a fake socket is created to test the functions
-# used to test send_frame and recv_frame when the frame
-#  is ready and just to check recv
+
 class FakeSocket:
     def __init__(self, recv_data: bytes = b""):
         self.sent = b""
@@ -24,8 +22,6 @@ class FakeSocket:
         return chunk
 
 
-# used to test the recv_exactly
-# internally the recv data is stored in small packet like envelops
 class ChunkedSocket:
 
     def __init__(self, recv_chunks):
@@ -86,9 +82,7 @@ def test_send_frame():
     print("Complete Frame:", frame)
 
 
-# This test verifies that recv_frame() correctly reads
-# a framed message from a socket and reconstructs the original
-# message type and payload."
+
 def test_recv_frame():
     message_type = "\0"
     payload = b"payload-data"
