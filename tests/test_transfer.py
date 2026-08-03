@@ -1,11 +1,15 @@
 import pytest
 import struct
-from network.transfer import _recv_exactly, recv_frame, send_frame
+from network.transfer import (
+    _recv_exactly,
+    recv_frame,
+    send_frame,
+)
 
 
 # a fake socket is created to test the functions
-# used to test send_frame and recv_frame when the frame is ready and just to check recv
-# internally the recv data is stored in one continuous memory
+# used to test send_frame and recv_frame when the frame
+#  is ready and just to check recv
 class FakeSocket:
     def __init__(self, recv_data: bytes = b""):
         self.sent = b""
@@ -38,7 +42,7 @@ class ChunkedSocket:
         return chunk[:n]
 
 
-# used to test integration test means to test send_frame and recv_frame together
+# Used to test send_frame() and recv_frame() together.
 class LoopbackSocket:
 
     def __init__(self):
@@ -54,7 +58,8 @@ class LoopbackSocket:
 
 
 def test_send_frame():
-    sock = FakeSocket()  # no recv data needed; this test only exercises sendall()
+    # no recv data needed; this test only exercises sendall()
+    sock = FakeSocket()
     message_type = "hello"
     payload = b"world"
 
@@ -81,7 +86,9 @@ def test_send_frame():
     print("Complete Frame:", frame)
 
 
-# This test verifies that recv_frame() correctly reads a framed message from a socket and reconstructs the original message type and payload."
+# This test verifies that recv_frame() correctly reads
+# a framed message from a socket and reconstructs the original
+# message type and payload."
 def test_recv_frame():
     message_type = "\0"
     payload = b"payload-data"
@@ -131,7 +138,7 @@ def test_recv_exactly_connection_closed():
 def test_send_receive_integration():
     sock = LoopbackSocket()
     message_type = "greeting"
-    payload = b"hello there, this is a test payload"
+    payload = b"hello there, " b"this is a test payload"
 
     print("Before sending:")
     print("Message Type:", message_type)
