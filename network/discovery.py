@@ -1,6 +1,7 @@
 from zeroconf import Zeroconf, ServiceInfo, ServiceBrowser
 import socket
 import time
+
 """
 Peer Discovery Module.
 Uses Zeroconf (mDNS) to advertise and browse for MeshVault instances on the LAN.
@@ -10,6 +11,7 @@ Mentee C Deliverables:
 - Weeks 3-4: Implement full mDNS announce/browse with metadata (N, K parameters inside TXT records).
 """
 from typing import List, Dict
+
 
 class PeerListener:
     def __init__(self):
@@ -30,8 +32,7 @@ class PeerListener:
 
         # Decode TXT record (metadata)
         properties = {
-            key.decode(): value.decode()
-            for key, value in info.properties.items()
+            key.decode(): value.decode() for key, value in info.properties.items()
         }
 
         peer = {
@@ -48,10 +49,7 @@ class PeerListener:
         """
         Called automatically when a service disappears from the network.
         """
-        self.peers = [
-            peer for peer in self.peers
-            if peer["name"] != name
-        ]
+        self.peers = [peer for peer in self.peers if peer["name"] != name]
 
     def update_service(self, zeroconf, service_type: str, name: str) -> None:
         """
@@ -74,16 +72,18 @@ class PeerDiscovery:
     def advertise_service(
         self, name: str, port: int, metadata: Dict[str, str] = None
     ) -> None:
-        ip = socket.gethostbyname(socket.gethostname()) # Step 1- apna IP nikalo
-        properties = metadata or {}                     # Step 2- metadata None hai to empty dict banao
-        self.service_info = ServiceInfo(                # Step 3- ServiceInfo object banao
+        ip = socket.gethostbyname(socket.gethostname())  # Step 1- apna IP nikalo
+        properties = metadata or {}  # Step 2- metadata None hai to empty dict banao
+        self.service_info = ServiceInfo(  # Step 3- ServiceInfo object banao
             type_=self.service_type,
             name=f"{name}.{self.service_type}",
             port=port,
             addresses=[socket.inet_aton(ip)],
-            properties=properties
+            properties=properties,
         )
-        self.zeroconf = Zeroconf()   # Step 4 -Zeroconf object banao aur service register karo
+        self.zeroconf = (
+            Zeroconf()
+        )  # Step 4 -Zeroconf object banao aur service register karo
         self.zeroconf.register_service(self.service_info)
         """
         Publishes the local peer service over mDNS with optional TXT records.
@@ -100,11 +100,7 @@ class PeerDiscovery:
         if self.zeroconf is None:
             self.zeroconf = Zeroconf()
         listener = PeerListener()
-        browser = ServiceBrowser(
-            self.zeroconf,
-            self.service_type,
-            listener
-        )
+        browser = ServiceBrowser(self.zeroconf, self.service_type, listener)
 
         time.sleep(timeout_seconds)
         return listener.peers
