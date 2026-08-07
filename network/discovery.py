@@ -1,4 +1,5 @@
-from zeroconf import Zeroconf, ServiceInfo, ServiceBrowser
+from zeroconf import ServiceInfo, ServiceBrowser
+from zeroconf import Zeroconf
 import socket
 import time
 
@@ -100,9 +101,16 @@ class PeerDiscovery:
         if self.zeroconf is None:
             self.zeroconf = Zeroconf()
         listener = PeerListener()
+
+        # Start the background browser
         browser = ServiceBrowser(self.zeroconf, self.service_type, listener)
 
+        # Wait for peers to be discovered
         time.sleep(timeout_seconds)
+
+        # USE the variable to stop the background thread!
+        browser.cancel()
+
         return listener.peers
 
     def stop(self) -> None:
