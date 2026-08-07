@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Session key caching & reuse — issue #15.
 
@@ -29,8 +31,13 @@ class SessionCache:
         self._store: dict[tuple[str, str], tuple[bytes, float]] = {}
         self._default_ttl = default_ttl_seconds
 
-    def store(self, fingerprint: str, ip: str, symmetric_key: bytes,
-              ttl_seconds: float | None = None) -> None:
+    def store(
+        self,
+        fingerprint: str,
+        ip: str,
+        symmetric_key: bytes,
+        ttl_seconds: float | None = None,
+    ) -> None:
         ttl = self._default_ttl if ttl_seconds is None else ttl_seconds
         expires_at = time.monotonic() + ttl
         self._store[(fingerprint, ip)] = (symmetric_key, expires_at)

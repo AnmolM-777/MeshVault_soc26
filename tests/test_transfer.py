@@ -1,8 +1,17 @@
 # tests/test_transfer.py
+import base64
 import socket
 import struct
+import threading
 import pytest
-from network.transfer import send_message, receive_message, FramingError
+from network.transfer import (
+    send_message,
+    receive_message,
+    FramingError,
+    send_share,
+    send_shares,
+    _serialize_share,
+)
 
 
 def _make_connected_pair():
@@ -66,12 +75,6 @@ def test_connection_closed_mid_frame_raises():
         server_conn.close()
 
 
-
-import base64
-import threading
-from network.transfer import send_share, send_shares, _serialize_share
-
-
 def _run_one_shot_server(host, port_holder, received_holder, ready_event):
     """Accept exactly one connection, read one framed message, store it."""
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -90,7 +93,8 @@ def _run_one_shot_server(host, port_holder, received_holder, ready_event):
 def test_send_share_reaches_real_peer():
     port_holder, received, ready = [], [], threading.Event()
     server_thread = threading.Thread(
-        target=_run_one_shot_server, args=("127.0.0.1", port_holder, received, ready)
+        target=_run_one_shot_server,
+        args=("127.0.0.1", port_holder, received, ready),
     )
     server_thread.start()
     ready.wait(timeout=2)
@@ -114,18 +118,22 @@ def test_serialize_share_roundtrips_binary_data():
 def test_send_shares_reports_per_peer_results():
     port_holder, received, ready = [], [], threading.Event()
     server_thread = threading.Thread(
-        target=_run_one_shot_server, args=("127.0.0.1", port_holder, received, ready)
+        target=_run_one_shot_server,
+        args=("127.0.0.1", port_holder, received, ready),
     )
     server_thread.start()
     ready.wait(timeout=2)
 
     shares = [(1, b"share-one"), (2, b"share-two")]
-    peers = [("127.0.0.1", port_holder[0]), ("127.0.0.1", 1)]  # port 1: nothing listens there
+    peers = [
+        ("127.0.0.1", port_holder[0]),
+        ("127.0.0.1", 1),
+    ]  # port 1: nothing listens there
     results = send_shares(shares, peers, timeout=1.0)
     server_thread.join(timeout=2)
 
-    assert results[0][1] is None               # first peer: success
-    assert isinstance(results[1][1], OSError)   # second peer: failed, but didn't raise
+    assert results[0][1] is None  # first peer: success
+    assert isinstance(results[1][1], OSError)  # second peer: failed, but didn't raise
 
 
 def test_send_shares_requires_matching_lengths():

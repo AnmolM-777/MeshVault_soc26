@@ -1,8 +1,10 @@
+from __future__ import annotations
 import json
 import socket
 import struct
+import base64
 
-HEADER_SIZE = 4  
+HEADER_SIZE = 4
 
 
 class FramingError(Exception):
@@ -45,14 +47,11 @@ def receive_message(sock: socket.socket) -> dict:
     return json.loads(body.decode("utf-8"))
 
 
-
-import base64
-# (json, socket, struct already imported from issue #25)
-
 DEFAULT_TIMEOUT = 5.0  # seconds to wait when connecting to a peer
 
 
 # ---- Client-side share transmission — issue #26 ----
+
 
 def _serialize_share(share: tuple[int, bytes]) -> dict:
     """
@@ -68,8 +67,12 @@ def _serialize_share(share: tuple[int, bytes]) -> dict:
     }
 
 
-def send_share(peer_host: str, peer_port: int, share: tuple[int, bytes],
-               timeout: float = DEFAULT_TIMEOUT) -> None:
+def send_share(
+    peer_host: str,
+    peer_port: int,
+    share: tuple[int, bytes],
+    timeout: float = DEFAULT_TIMEOUT,
+) -> None:
     """
     Open a TCP connection to a single peer and send them their one share,
     framed via send_message. The connection is closed automatically once
@@ -80,9 +83,11 @@ def send_share(peer_host: str, peer_port: int, share: tuple[int, bytes],
         send_message(sock, payload)
 
 
-def send_shares(shares: list[tuple[int, bytes]],
-                 peers: list[tuple[str, int]],
-                 timeout: float = DEFAULT_TIMEOUT) -> list[tuple[tuple[str, int], Exception | None]]:
+def send_shares(
+    shares: list[tuple[int, bytes]],
+    peers: list[tuple[str, int]],
+    timeout: float = DEFAULT_TIMEOUT,
+) -> list[tuple[tuple[str, int], Exception | None]]:
     """
     Send each share to its corresponding peer address (shares[i] goes to
     peers[i]). Returns a list of (peer_address, error) pairs so the caller
