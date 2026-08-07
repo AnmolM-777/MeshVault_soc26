@@ -1,9 +1,8 @@
-# network/transfer.py
 import json
 import socket
 import struct
 
-HEADER_SIZE = 4  # 4-byte big-endian length prefix, per issue #25
+HEADER_SIZE = 4  
 
 
 class FramingError(Exception):
@@ -46,9 +45,9 @@ def receive_message(sock: socket.socket) -> dict:
     return json.loads(body.decode("utf-8"))
 
 
-# added near the top of network/transfer.py
+
 import base64
-# (json, socket, struct already imported from #25)
+# (json, socket, struct already imported from issue #25)
 
 DEFAULT_TIMEOUT = 5.0  # seconds to wait when connecting to a peer
 
