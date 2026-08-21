@@ -139,3 +139,37 @@ def test_send_shares_reports_per_peer_results():
 def test_send_shares_requires_matching_lengths():
     with pytest.raises(ValueError):
         send_shares([(1, b"a")], [("127.0.0.1", 1), ("127.0.0.1", 2)])
+
+
+def test_deserialize_share_valid_and_invalid():
+    from network.transfer import _deserialize_share
+
+    valid = {"x": 2, "data": base64.b64encode(b"test-share-bytes").decode("ascii")}
+    assert _deserialize_share(valid) == (2, b"test-share-bytes")
+
+    with pytest.raises(ValueError):
+        _deserialize_share({"invalid": "payload"})
+
+
+def test_receive_share_from_connected_socket():
+    from network.transfer import receive_share
+
+    server_conn, client_conn = _make_connected_pair()
+    try:
+        share = (4, b"test-secret-share-payload")
+        send_message(client_conn, _serialize_share(share))
+        recovered_share = receive_share(server_conn)
+        assert recovered_share == share
+    finally:
+        server_conn.close()
+        client_conn.close()
+
+
+def test_send_share_with_retry_failure():
+    from network.transfer import send_share_with_retry
+
+    # Port 1 is closed
+    with pytest.raises(OSError):
+        send_share_with_retry(
+            "127.0.0.1", 1, (1, b"data"), retries=2, delay=0.01, timeout=0.5
+        )
