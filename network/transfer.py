@@ -67,6 +67,26 @@ def _serialize_share(share: tuple[int, bytes]) -> dict:
     }
 
 
+def _deserialize_share(payload: dict) -> tuple[int, bytes]:
+    """
+    Parse a JSON dictionary containing 'x' and base64-encoded 'data' back into
+    a (x, share_bytes) tuple.
+    """
+    if not isinstance(payload, dict) or "x" not in payload or "data" not in payload:
+        raise ValueError("Invalid share payload structure")
+    x = int(payload["x"])
+    share_bytes = base64.b64decode(payload["data"])
+    return (x, share_bytes)
+
+
+def receive_share(sock: socket.socket) -> tuple[int, bytes]:
+    """
+    Read one framed share message from sock and return the (x, share_bytes) tuple.
+    """
+    payload = receive_message(sock)
+    return _deserialize_share(payload)
+
+
 def send_share(
     peer_host: str,
     peer_port: int,
@@ -83,10 +103,124 @@ def send_share(
         send_message(sock, payload)
 
 
+def send_share_with_retry(
+    peer_host: str,
+    peer_port: int,
+    share: tuple[int, bytes],
+    retries: int = 3,
+    delay: float = 0.2,
+    timeout: float = DEFAULT_TIMEOUT,
+) -> None:
+    """
+    Attempt to send a share to a peer with exponential backoff / retries.
+    """
+    last_err: Exception | None = None
+    for attempt in range(retries):
+        try:
+            send_share(peer_host, peer_port, share, timeout=timeout)
+            return
+        except OSError as e:
+            last_err = e
+            import time
+
+            time.sleep(delay * (attempt + 1))
+    if last_err:
+        raise last_err
+
+
+def send_encrypted_share(
+    peer_host: str,
+    peer_port: int,
+    share: tuple[int, bytes],
+    timeout: float = DEFAULT_TIMEOUT,
+) -> None:
+    """
+    Connect to a peer, perform X25519 key exchange, and send an AES-256-GCM
+    encrypted SSS share.
+    """
+    from crypto.channel import SecureChannel
+
+    channel = SecureChannel()
+    my_pub = channel.generate_key_pair()
+
+    with socket.create_connection((peer_host, peer_port), timeout=timeout) as sock:
+        # Step 1: Send client public key
+        send_message(
+            sock,
+            {
+                "type": "KEY_EXCHANGE",
+                "public_key": base64.b64encode(my_pub).decode("ascii"),
+            },
+        )
+
+        # Step 2: Receive peer public key
+        resp = receive_message(sock)
+        if resp.get("type") != "KEY_EXCHANGE" or "public_key" not in resp:
+            raise FramingError("Invalid key exchange response from peer")
+        peer_pub = base64.b64decode(resp["public_key"])
+        channel.compute_shared_secret(peer_pub)
+
+        # Step 3: Encrypt and send share
+        share_payload = _serialize_share(share)
+        encrypted_bytes = channel.encrypt_message(
+            json.dumps(share_payload).encode("utf-8")
+        )
+        send_message(
+            sock,
+            {
+                "type": "SHARE",
+                "payload": base64.b64encode(encrypted_bytes).decode("ascii"),
+            },
+        )
+
+
+def receive_encrypted_share(conn: socket.socket) -> tuple[int, bytes]:
+    """
+    Perform X25519 handshake and receive an AES-256-GCM encrypted share over an established connection.
+    Supports both encrypted handshake and fallback direct share payload.
+    """
+    from crypto.channel import SecureChannel
+
+    msg = receive_message(conn)
+
+    # Check if this is a direct plaintext share
+    if "x" in msg and "data" in msg:
+        return _deserialize_share(msg)
+
+    if msg.get("type") == "KEY_EXCHANGE" and "public_key" in msg:
+        peer_pub = base64.b64decode(msg["public_key"])
+        channel = SecureChannel()
+        my_pub = channel.generate_key_pair()
+
+        # Reply with our public key
+        send_message(
+            conn,
+            {
+                "type": "KEY_EXCHANGE",
+                "public_key": base64.b64encode(my_pub).decode("ascii"),
+            },
+        )
+
+        channel.compute_shared_secret(peer_pub)
+
+        # Receive encrypted share
+        share_msg = receive_message(conn)
+        if share_msg.get("type") != "SHARE" or "payload" not in share_msg:
+            raise FramingError("Expected encrypted SHARE message")
+
+        ciphertext = base64.b64decode(share_msg["payload"])
+        decrypted_json = channel.decrypt_message(ciphertext)
+        share_payload = json.loads(decrypted_json.decode("utf-8"))
+        return _deserialize_share(share_payload)
+
+    raise FramingError(f"Unknown message structure received: {msg}")
+
+
 def send_shares(
     shares: list[tuple[int, bytes]],
     peers: list[tuple[str, int]],
     timeout: float = DEFAULT_TIMEOUT,
+    encrypted: bool = False,
 ) -> list[tuple[tuple[str, int], Exception | None]]:
     """
     Send each share to its corresponding peer address (shares[i] goes to
@@ -99,8 +233,13 @@ def send_shares(
     results = []
     for share, peer in zip(shares, peers):
         try:
-            send_share(peer[0], peer[1], share, timeout=timeout)
+            if encrypted:
+                send_encrypted_share(peer[0], peer[1], share, timeout=timeout)
+            else:
+                send_share(peer[0], peer[1], share, timeout=timeout)
             results.append((peer, None))
         except OSError as exc:
+            results.append((peer, exc))
+        except Exception as exc:
             results.append((peer, exc))
     return results

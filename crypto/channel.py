@@ -1,55 +1,96 @@
-"""
-Secure Channel Encryption Module.
-Responsible for X25519 ECDH key exchange and AES-256-GCM symmetric encryption.
+from __future__ import annotations
 
-Mentee B Deliverables:
-- Weeks 1-2: Write working X25519 key exchange between two processes, derive and print shared secret.
-- Weeks 3-4: Implement full ECDH handshake and AES-GCM encryption/decryption wrapper.
-"""
+import os
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import x25519
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 
 class SecureChannel:
     """
-    Handles key exchange and secure message packaging between peers.
+    Handles ephemeral X25519 ECDH key exchange and AES-256-GCM authenticated
+    encryption/decryption between peers.
     """
 
     def __init__(self):
-        self.private_key = None
-        self.public_key = None
-        self.shared_key = None
+        self.private_key: x25519.X25519PrivateKey | None = None
+        self.public_key: x25519.X25519PublicKey | None = None
+        self.shared_key: bytes | None = None
 
     def generate_key_pair(self) -> bytes:
         """
-        Generates an X25519 private/public key pair.
-
-        Mentee B Weeks 1-2 Deliverable.
+        Generates an X25519 private/public key pair and returns the public key
+        as raw 32-byte bytes.
         """
-        # TODO: Generate X25519 key pair and return public key bytes
-        raise NotImplementedError("generate_key_pair has not been implemented yet.")
+        self.private_key = x25519.X25519PrivateKey.generate()
+        self.public_key = self.private_key.public_key()
+        return self.public_key.public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
+        )
 
     def compute_shared_secret(self, peer_public_key_bytes: bytes) -> bytes:
         """
-        Computes the shared symmetric key using peer's public key.
-
-        Mentee B Weeks 1-2 Deliverable.
+        Computes the Diffie-Hellman shared secret with the peer's public key
+        and derives a 32-byte symmetric AES session key using HKDF-SHA256.
         """
-        # TODO: Compute Diffie-Hellman shared secret and derive session key (HKDF)
-        raise NotImplementedError("compute_shared_secret has not been implemented yet.")
+        if self.private_key is None:
+            raise ValueError(
+                "Local key pair must be generated before computing shared secret."
+            )
+
+        if (
+            not isinstance(peer_public_key_bytes, (bytes, bytearray))
+            or len(peer_public_key_bytes) != 32
+        ):
+            raise ValueError("Peer public key must be exactly 32 bytes.")
+
+        peer_public_key = x25519.X25519PublicKey.from_public_bytes(
+            bytes(peer_public_key_bytes)
+        )
+        raw_secret = self.private_key.exchange(peer_public_key)
+
+        hkdf = HKDF(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=None,
+            info=b"meshvault-v1-session-key",
+        )
+        self.shared_key = hkdf.derive(raw_secret)
+        return self.shared_key
 
     def encrypt_message(self, plaintext: bytes) -> bytes:
         """
-        Encrypts a message using the derived shared key with AES-256-GCM.
-
-        Mentee B Weeks 3-4 Deliverable.
+        Encrypts a message using AES-256-GCM with a fresh 12-byte nonce.
+        Returns nonce (12 bytes) + ciphertext + tag (16 bytes).
         """
-        # TODO: Encrypt using AES-GCM
-        raise NotImplementedError("encrypt_message has not been implemented yet.")
+        if self.shared_key is None:
+            raise ValueError("Shared symmetric key has not been established.")
+
+        if not isinstance(plaintext, (bytes, bytearray)):
+            raise TypeError("Plaintext must be bytes.")
+
+        nonce = os.urandom(12)
+        aesgcm = AESGCM(self.shared_key)
+        ciphertext = aesgcm.encrypt(nonce, bytes(plaintext), None)
+        return nonce + ciphertext
 
     def decrypt_message(self, ciphertext: bytes) -> bytes:
         """
         Decrypts an AES-256-GCM encrypted message.
-
-        Mentee B Weeks 3-4 Deliverable.
+        Expects nonce (12 bytes) + ciphertext + tag (16 bytes).
         """
-        # TODO: Decrypt using AES-GCM
-        raise NotImplementedError("decrypt_message has not been implemented yet.")
+        if self.shared_key is None:
+            raise ValueError("Shared symmetric key has not been established.")
+
+        if not isinstance(ciphertext, (bytes, bytearray)):
+            raise TypeError("Ciphertext must be bytes.")
+
+        if len(ciphertext) < 28:  # 12-byte nonce + 16-byte minimum tag
+            raise ValueError("Ciphertext too short to be valid AES-GCM frame.")
+
+        nonce = ciphertext[:12]
+        payload = ciphertext[12:]
+        aesgcm = AESGCM(self.shared_key)
+        return aesgcm.decrypt(nonce, payload, None)
