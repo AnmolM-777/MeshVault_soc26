@@ -8,31 +8,12 @@ Mentee D Deliverables:
 """
 
 
-def send_frame(sock, message_type: str, payload: bytes) -> None:
-    """
-    Prepends length headers and sends a framed message over a socket.
-
-    Mentee D Weeks 1-2 Deliverable.
-    """
-    # TODO: Package message_type and payload into a framed structure and send
-    raise NotImplementedError("send_frame has not been implemented yet.")
-
-
-def recv_frame(sock) -> tuple:
-    """
-    Reads a length-prefixed framed message from a socket.
-
-    Mentee D Weeks 1-2 Deliverable.
-    """
-    # TODO: Read size header and extract the message type and payload bytes
-    raise NotImplementedError("recv_frame has not been implemented yet.")
-
-# network/transfer.py
+import base64
 import json
 import socket
 import struct
 import time
-import base64
+
 
 HEADER_SIZE = 4  # 4-byte big-endian length prefix, per issue #25
 DEFAULT_TIMEOUT = 5.0  # seconds to wait when connecting to a peer
@@ -80,6 +61,52 @@ def receive_message(sock: socket.socket) -> dict:
     (length,) = struct.unpack("!I", header)
     body = _recv_exact(sock, length)
     return json.loads(body.decode("utf-8"))
+
+
+def send_frame(sock: socket.socket, message_type: str, payload: bytes) -> None:
+    """
+    Prepends length headers and sends a framed message over a socket.
+    Uses send_message to serialize and frame the message type and payload.
+    """
+    if isinstance(payload, bytes):
+        payload_data = base64.b64encode(payload).decode("ascii")
+        encoding = "base64"
+    else:
+        payload_data = payload
+        encoding = "raw"
+
+    msg = {
+        "type": message_type,
+        "payload": payload_data,
+        "encoding": encoding,
+    }
+    send_message(sock, msg)
+
+
+def recv_frame(sock: socket.socket) -> tuple:
+    """
+    Reads a length-prefixed framed message from a socket using receive_message.
+    Returns tuple of (message_type, payload_bytes).
+    """
+    msg = receive_message(sock)
+    msg_type = msg.get("type", "")
+    payload_data = msg.get("payload", "")
+    encoding = msg.get("encoding", "")
+
+    if encoding == "base64" and isinstance(payload_data, str):
+        payload_bytes = base64.b64decode(payload_data.encode("ascii"))
+    elif isinstance(payload_data, str):
+        try:
+            payload_bytes = base64.b64decode(payload_data.encode("ascii"))
+        except Exception:
+            payload_bytes = payload_data.encode("utf-8")
+    elif isinstance(payload_data, bytes):
+        payload_bytes = payload_data
+    else:
+        payload_bytes = json.dumps(payload_data).encode("utf-8")
+
+    return msg_type, payload_bytes
+
 
 
 
