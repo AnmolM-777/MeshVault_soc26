@@ -1,96 +1,89 @@
-from __future__ import annotations
+"""
+Concurrent Multi-Peer Recover Operation Coordinator (v2).
+Coordinates CLI input, mDNS advertisement, concurrent multi-peer socket listening (via transfer2),
+and SSS secret reconstruction.
+"""
 
-import socket
-from typing import List, Tuple
+from __future__ import annotations
+from typing import List, Tuple, Optional
 from crypto.sss import reconstruct_secret
 from network.discovery import PeerDiscovery
-from network.transfer import receive_encrypted_share
-
-
-def _collect_shares(
-    server_sock: socket.socket,
-    threshold_k: int,
-) -> List[Tuple[int, bytes]]:
-    """Accept incoming connections and collect threshold_k unique shares."""
-    shares: List[Tuple[int, bytes]] = []
-    seen_x: set[int] = set()
-
-    while len(shares) < threshold_k:
-        conn, addr = server_sock.accept()
-        try:
-            share = receive_encrypted_share(conn)
-            x_val, share_bytes = share
-            if x_val not in seen_x:
-                seen_x.add(x_val)
-                shares.append(share)
-                count = len(shares)
-                print(
-                    f"  [+] Received share (x={x_val}, {len(share_bytes)} bytes) "
-                    f"from {addr[0]}:{addr[1]} [{count}/{threshold_k}]"
-                )
-            else:
-                print(
-                    f"  [!] Duplicate share x={x_val} received from {addr[0]}:{addr[1]}, ignored."
-                )
-
-        except Exception as e:
-            print(f"  [-] Error receiving share from {addr[0]}:{addr[1]}: {e}")
-        finally:
-            try:
-                conn.close()
-            except Exception:
-                pass
-    return shares
+from network.transfer2 import MultiPeerServer
 
 
 def execute_recover(
     threshold_k: int,
     listen_port: int = 5000,
     listen_host: str = "0.0.0.0",
-    timeout: float | None = None,
+    timeout: float = 30.0,
     advertise: bool = True,
 ) -> bytes:
     """
-    Executes the secret recovery operation.
-    Listens for threshold_k connections from peers, receives shares (encrypted or plain),
-    validates unique x coordinates, and reconstructs the original secret.
+    Executes the secret recovery operation using concurrent multi-peer listening:
+    1. Starts MultiPeerServer from transfer2.py to handle multiple peer connections simultaneously.
+    2. Advertises the recovery service over mDNS so peers on LAN can discover it.
+    3. Concurrently receives and decrypts K shares from connecting peers.
+    4. Reconstructs and returns the original secret bytes.
 
-    Returns the reconstructed secret bytes.
+    Args:
+        threshold_k: Minimum number of shares (K) required to reconstruct the secret.
+        listen_port: Port to listen on (default: 5000).
+        listen_host: Host IP to bind (default: "0.0.0.0").
+        timeout: Maximum seconds to wait for shares before timing out (default: 30.0).
+        advertise: Whether to broadcast this recovery node via mDNS (default: True).
+
+    Returns:
+        bytes: The reconstructed original secret.
+
+    Raises:
+        ValueError: If threshold_k is invalid.
+        RuntimeError: If insufficient shares are collected within the timeout.
     """
     if threshold_k < 1 or threshold_k > 255:
         raise ValueError("Threshold K must be between 1 and 255.")
 
-    server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_sock.bind((listen_host, listen_port))
-    server_sock.listen(threshold_k)
-    if timeout:
-        server_sock.settimeout(timeout)
-
     print(
-        f"MeshVault Recovery Node active: Listening on {listen_host}:{listen_port} (Waiting for {threshold_k} shares)..."
+        f"[*] MeshVault Recovery Node active: Listening on {listen_host}:{listen_port} "
+        f"(Waiting concurrently for {threshold_k} shares)..."
     )
 
-    pd: PeerDiscovery | None = None
+    # Step 1: Start transfer2's Multi-Peer Concurrent Server
+    server = MultiPeerServer(host=listen_host, port=listen_port, threshold_k=threshold_k)
+    active_port = server.start()
+
+    # Step 2: Advertise on LAN via mDNS so peers can auto-discover this node
+    pd: Optional[PeerDiscovery] = None
     if advertise:
         try:
             pd = PeerDiscovery()
             pd.advertise_service(
                 name="meshvault-recovery",
-                port=listen_port,
+                port=active_port,
                 metadata={"role": "recover", "k": str(threshold_k)},
             )
+            print(f"[*] mDNS Service advertised: 'meshvault-recovery' on port {active_port}")
         except Exception as e:
-            print(
-                f"Warning: mDNS advertisement failed ({e}), continuing with TCP listener."
-            )
+            print(f"[!] Warning: mDNS advertisement failed ({e}), continuing with TCP listener.")
 
+    # Step 3: Concurrently collect K shares (transfer2 handles ECDH handshake + AES decrypt per peer)
     try:
-        shares = _collect_shares(server_sock, threshold_k)
+        shares_dict = server.receive_shares(timeout_seconds=timeout)
     finally:
+        # Step 4: Gracefully cleanup mDNS advertisement and socket server
         if pd is not None:
             pd.stop()
-        server_sock.close()
+        server.stop()
 
-    print("Reconstructing secret from collected threshold shares...")
-    return reconstruct_secret(shares[:threshold_k])
+    # Step 5: Check if enough distinct shares were received
+    if len(shares_dict) < threshold_k:
+        raise RuntimeError(
+            f"Recovery failed: Received only {len(shares_dict)}/{threshold_k} shares "
+            f"within {timeout}s timeout."
+        )
+
+    print(f"[+] Successfully collected {len(shares_dict)}/{threshold_k} unique shares.")
+    print("[*] Reconstructing secret from collected shares...")
+
+    # Step 6: Convert {x: share_bytes} dictionary to [(x, share_bytes), ...] format for SSS
+    shares_list: List[Tuple[int, bytes]] = list(shares_dict.items())[:threshold_k]
+    return reconstruct_secret(shares_list)

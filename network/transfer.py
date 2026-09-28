@@ -1,14 +1,28 @@
-from __future__ import annotations
+"""
+Network Transfer Layer.
+Handles TCP connection management, message serialization, and framing.
+
+Mentee D Deliverables:
+- Weeks 1-2: Implement basic length-prefixed TCP socket framing to send and receive raw byte packets.
+- Weeks 3-4: Complete TCP transmission wrapper, handling partial reads/writes and unexpected connection drops.
+"""
+
+import base64
 import json
 import socket
 import struct
-import base64
 
-HEADER_SIZE = 4
+HEADER_SIZE = 4  # 4-byte big-endian length prefix, per issue #25
+DEFAULT_TIMEOUT = 5.0  # seconds to wait when connecting to a peer
 
 
 class FramingError(Exception):
     """Raised when a socket frame is malformed or the connection drops mid-frame."""
+
+
+# ---------------------------------------------------------------------------
+# Framing — issue #25 (TEAMMATE'S CODE, exactly as given, unchanged)
+# ---------------------------------------------------------------------------
 
 
 def send_message(sock: socket.socket, payload: dict) -> None:
@@ -47,13 +61,57 @@ def receive_message(sock: socket.socket) -> dict:
     return json.loads(body.decode("utf-8"))
 
 
-DEFAULT_TIMEOUT = 5.0  # seconds to wait when connecting to a peer
+def send_frame(sock: socket.socket, message_type: str, payload: bytes) -> None:
+    """
+    Prepends length headers and sends a framed message over a socket.
+    Uses send_message to serialize and frame the message type and payload.
+    """
+    if isinstance(payload, bytes):
+        payload_data = base64.b64encode(payload).decode("ascii")
+        encoding = "base64"
+    else:
+        payload_data = payload
+        encoding = "raw"
+
+    msg = {
+        "type": message_type,
+        "payload": payload_data,
+        "encoding": encoding,
+    }
+    send_message(sock, msg)
 
 
-# ---- Client-side share transmission — issue #26 ----
+def recv_frame(sock: socket.socket) -> tuple:
+    """
+    Reads a length-prefixed framed message from a socket using receive_message.
+    Returns tuple of (message_type, payload_bytes).
+    """
+    msg = receive_message(sock)
+    msg_type = msg.get("type", "")
+    payload_data = msg.get("payload", "")
+    encoding = msg.get("encoding", "")
+
+    if encoding == "base64" and isinstance(payload_data, str):
+        payload_bytes = base64.b64decode(payload_data.encode("ascii"))
+    elif isinstance(payload_data, str):
+        try:
+            payload_bytes = base64.b64decode(payload_data.encode("ascii"))
+        except Exception:
+            payload_bytes = payload_data.encode("utf-8")
+    elif isinstance(payload_data, bytes):
+        payload_bytes = payload_data
+    else:
+        payload_bytes = json.dumps(payload_data).encode("utf-8")
+
+    return msg_type, payload_bytes
 
 
-def _serialize_share(share: tuple[int, bytes]) -> dict:
+# ---------------------------------------------------------------------------
+# Client-side share transmission — issue #26 (TEAMMATE'S CODE, unchanged)
+# ---------------------------------------------------------------------------
+
+
+def _serialize_share(share: tuple) -> dict:
     """
     Turn a (x, share_bytes) tuple from split_secret into a JSON-safe dict.
     JSON has no concept of raw binary data, so the share's bytes are
@@ -88,10 +146,7 @@ def receive_share(sock: socket.socket) -> tuple[int, bytes]:
 
 
 def send_share(
-    peer_host: str,
-    peer_port: int,
-    share: tuple[int, bytes],
-    timeout: float = DEFAULT_TIMEOUT,
+    peer_host: str, peer_port: int, share: tuple, timeout: float = DEFAULT_TIMEOUT
 ) -> None:
     """
     Open a TCP connection to a single peer and send them their one share,
