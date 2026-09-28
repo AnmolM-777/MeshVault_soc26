@@ -113,7 +113,7 @@ class MultiPeerServer:
                 if len(self.shares) >= self.threshold_k:
                     self.stop_event.set()
 
-        except Exception as e:
+        except Exception:
             # Individual peer disconnect/error handle karo
             pass
         finally:
