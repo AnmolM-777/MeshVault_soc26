@@ -242,7 +242,7 @@ def test_e2e_recover_corrupted_share():
 
     send_encrypted_share("127.0.0.1", free_port, corrupted_share, timeout=2.0)
     time.sleep(0.05)
-    
+
     for i in range(1, threshold_k):
         send_encrypted_share("127.0.0.1", free_port, shares[i], timeout=2.0)
         time.sleep(0.05)
@@ -260,7 +260,7 @@ def test_e2e_split_unreachable_peer():
     """
     Simulates: split operation where one specified peer is unreachable.
     Why fail: Connection attempts should fail for that peer.
-    Expected: execute_split should continue and attempt to send to available peers. It will not raise, 
+    Expected: execute_split should continue and attempt to send to available peers. It will not raise,
               but handles the unreachable peer according to existing error-handling (prints error).
     """
     temp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -274,7 +274,10 @@ def test_e2e_split_unreachable_peer():
     stop_event = threading.Event()
     peer_threads = []
     for i in range(2):
-        t = threading.Thread(target=_peer_listener, args=(ports, shares_received[i], ready_events[i], stop_event))
+        t = threading.Thread(
+            target=_peer_listener,
+            args=(ports, shares_received[i], ready_events[i], stop_event),
+        )
         t.daemon = True
         t.start()
         peer_threads.append(t)
@@ -283,7 +286,9 @@ def test_e2e_split_unreachable_peer():
     peers = [("127.0.0.1", ports[0]), ("127.0.0.1", ports[1]), ("127.0.0.1", dead_port)]
 
     secret = b"Unreachable-Peer-Test"
-    shares = execute_split(secret, threshold_k=2, shares_n=3, peers=peers, transfer_timeout=1.0)
+    shares = execute_split(
+        secret, threshold_k=2, shares_n=3, peers=peers, transfer_timeout=1.0
+    )
 
     for t in peer_threads:
         t.join(timeout=3.0)
@@ -362,7 +367,9 @@ def test_e2e_split_invalid_peer_address(capsys):
     secret = b"Invalid-Address-Test"
     peers = [("invalid.nonexistent.local", 12345)]
 
-    shares = execute_split(secret, threshold_k=1, shares_n=1, peers=peers, transfer_timeout=1.0)
+    shares = execute_split(
+        secret, threshold_k=1, shares_n=1, peers=peers, transfer_timeout=1.0
+    )
     assert len(shares) == 1
 
     captured = capsys.readouterr()
@@ -453,4 +460,3 @@ def test_e2e_recover_no_peers():
     """
     with pytest.raises(ValueError, match="Threshold K must be between 1 and 255"):
         execute_recover(threshold_k=0, listen_port=5000, advertise=False)
-

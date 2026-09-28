@@ -28,15 +28,16 @@ from crypto.integrity import (
     unpack_shares_with_integrity,
 )
 
-
 # --------------------------------------------------------------------------
 # 1. Hash computation at split time
 # --------------------------------------------------------------------------
+
 
 def test_compute_integrity_hash_matches_sha256():
     secret = b"super-secret-api-key-12345"
     expected = hashlib.sha256(secret).digest()
     assert compute_integrity_hash(secret) == expected
+
 
 def test_compute_integrity_hash_rejects_non_bytes():
     with pytest.raises(TypeError):
@@ -49,12 +50,15 @@ def test_compute_integrity_hash_is_deterministic():
 
 
 def test_different_secrets_produce_different_hashes():
-    assert compute_integrity_hash(b"secret-one") != compute_integrity_hash(b"secret-two")
+    assert compute_integrity_hash(b"secret-one") != compute_integrity_hash(
+        b"secret-two"
+    )
 
 
 # --------------------------------------------------------------------------
 # 2. Hash metadata rides alongside each share packet
 # --------------------------------------------------------------------------
+
 
 def test_pack_share_prepends_hash_to_payload():
     secret_hash = b"\xaa" * HASH_LEN
@@ -137,6 +141,7 @@ def test_unpack_shares_with_integrity_detects_disagreeing_hashes():
 # 3. Verification of reconstructed secret against the hash
 # --------------------------------------------------------------------------
 
+
 def test_verify_integrity_passes_for_correct_secret():
     secret = b"correct-secret-value"
     secret_hash = compute_integrity_hash(secret)
@@ -153,6 +158,7 @@ def test_verify_integrity_raises_for_wrong_secret():
 # 4. Full split -> corrupt -> recover pipeline: corrupted share is caught
 #    instead of silently producing wrong output
 # --------------------------------------------------------------------------
+
 
 def test_end_to_end_valid_reconstruction_passes_integrity():
     secret = b"end-to-end-valid-secret"

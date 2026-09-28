@@ -64,6 +64,7 @@ class TamperDetectedError(Exception):
 # Core hashing
 # --------------------------------------------------------------------------
 
+
 def compute_integrity_hash(secret: bytes) -> bytes:
     """Compute the SHA-256 digest of the original secret at split time."""
     if not isinstance(secret, (bytes, bytearray)):
@@ -90,11 +91,14 @@ def verify_integrity(reconstructed_secret: bytes, expected_hash: bytes) -> None:
 # Optional keyed variant (HMAC) — not used by default, kept for mentor review
 # --------------------------------------------------------------------------
 
+
 def compute_integrity_hmac(secret: bytes, key: bytes) -> bytes:
     return hmac.new(key, secret, hashlib.sha256).digest()
 
 
-def verify_integrity_hmac(reconstructed_secret: bytes, key: bytes, expected_mac: bytes) -> None:
+def verify_integrity_hmac(
+    reconstructed_secret: bytes, key: bytes, expected_mac: bytes
+) -> None:
     actual_mac = hmac.new(key, reconstructed_secret, hashlib.sha256).digest()
     if not hmac.compare_digest(actual_mac, expected_mac):
         raise TamperDetectedError("HMAC verification failed on reconstructed secret.")
@@ -104,6 +108,7 @@ def verify_integrity_hmac(reconstructed_secret: bytes, key: bytes, expected_mac:
 # Packet packing / unpacking — this is what lets the hash "ride along"
 # with each share without changing transfer.py / discovery.py
 # --------------------------------------------------------------------------
+
 
 def pack_share_with_integrity(
     share: Tuple[int, bytes], secret_hash: bytes
@@ -130,7 +135,7 @@ def pack_shares_with_integrity(
 
 
 def unpack_share_with_integrity(
-    packet: Tuple[int, bytes]
+    packet: Tuple[int, bytes],
 ) -> Tuple[Tuple[int, bytes], bytes]:
     """
     Reverse of pack_share_with_integrity.
@@ -153,7 +158,7 @@ def unpack_share_with_integrity(
 
 
 def unpack_shares_with_integrity(
-    packets: List[Tuple[int, bytes]]
+    packets: List[Tuple[int, bytes]],
 ) -> Tuple[List[Tuple[int, bytes]], bytes]:
     """
     Unpack a list of received share packets and confirm they all agree
