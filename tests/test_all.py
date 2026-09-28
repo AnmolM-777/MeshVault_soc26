@@ -21,7 +21,6 @@ import socket
 import struct
 import threading
 import time
-from typing import List, Tuple
 from unittest.mock import MagicMock, patch
 
 import pytest
