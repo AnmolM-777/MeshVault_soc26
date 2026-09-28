@@ -62,10 +62,10 @@ from network.transfer import (
     receive_encrypted_share,
 )
 
+
 # ==============================================================================
 # Helper functions for networking & integration tests
 # ==============================================================================
-
 
 def _make_connected_pair():
     """Spin up a real local TCP server/client pair connected to each other."""
@@ -124,7 +124,6 @@ def _peer_listener(port_holder, received_shares, ready_event, stop_event):
 # ==============================================================================
 # PART 1: Shamir's Secret Sharing (SSS) & GF(256) Finite Field
 # ==============================================================================
-
 
 def test_sss_import():
     """Ensure the SSS functions are correctly defined and can be imported."""
@@ -189,7 +188,6 @@ def test_mismatched_lengths_raises():
 # ==============================================================================
 # PART 2: Cryptographic Channel Security (X25519 ECDH & AES-256-GCM)
 # ==============================================================================
-
 
 def test_channel_key_pair_generation():
     channel = SecureChannel()
@@ -308,7 +306,6 @@ def test_decrypt_too_short_ciphertext_raises():
 # PART 3: Cryptographic Integrity Checksums & Share Tamper Detection
 # ==============================================================================
 
-
 def test_compute_integrity_hash_matches_sha256():
     secret = b"super-secret-api-key-12345"
     expected = hashlib.sha256(secret).digest()
@@ -326,9 +323,7 @@ def test_compute_integrity_hash_is_deterministic():
 
 
 def test_different_secrets_produce_different_hashes():
-    assert compute_integrity_hash(b"secret-one") != compute_integrity_hash(
-        b"secret-two"
-    )
+    assert compute_integrity_hash(b"secret-one") != compute_integrity_hash(b"secret-two")
 
 
 def test_pack_share_prepends_hash_to_payload():
@@ -508,7 +503,6 @@ def test_end_to_end_truncated_packet_raises_before_reconstruction():
 # PART 4: Session Key Caching (SessionCache)
 # ==============================================================================
 
-
 def test_fingerprint_generation():
     key = b"\x01" * 32
     fp = fingerprint_of(key)
@@ -557,7 +551,6 @@ def test_session_cache_invalidate_and_clear():
 # ==============================================================================
 # PART 5: Network Transfer Layer & TCP Socket Framing
 # ==============================================================================
-
 
 def test_send_and_receive_simple_message():
     server_conn, client_conn = _make_connected_pair()
@@ -687,7 +680,6 @@ def test_send_share_with_retry_failure():
 # PART 6: Peer Discovery (Zeroconf / mDNS)
 # ==============================================================================
 
-
 def test_get_local_ip_returns_valid_string():
     ip = _get_local_ip()
     assert isinstance(ip, str)
@@ -755,7 +747,6 @@ def test_find_peers_mocked(mock_zc_class, mock_browser_class):
 # ==============================================================================
 # PART 7: Command-Line Interface (CLI split & recover)
 # ==============================================================================
-
 
 def test_parse_peer_valid():
     host, port = _parse_peer("192.168.1.100:5005")
@@ -830,7 +821,6 @@ def test_cli_split_invalid_k_n():
 # ==============================================================================
 # PART 8: End-to-End Multi-Peer Integration Workflows
 # ==============================================================================
-
 
 def test_e2e_split_to_multiple_peers():
     """Test splitting a secret and securely sending shares to 3 distinct mock peer nodes."""
