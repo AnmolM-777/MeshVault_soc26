@@ -24,9 +24,9 @@ class MultiPeerServer:
         self.port = port
         self.threshold_k = threshold_k
         self.server_sock: Optional[socket.socket] = None
-        self.shares: Dict[int, bytes] = {}       # Saare received shares yahan save honge
-        self.lock = threading.Lock()              # Thread safety ke liye Lock
-        self.stop_event = threading.Event()       # K shares pure hone par switch ON hoga
+        self.shares: Dict[int, bytes] = {}  # Saare received shares yahan save honge
+        self.lock = threading.Lock()  # Thread safety ke liye Lock
+        self.stop_event = threading.Event()  # K shares pure hone par switch ON hoga
         self.client_threads: list[threading.Thread] = []
         self._listener_thread: Optional[threading.Thread] = None
 
@@ -39,11 +39,15 @@ class MultiPeerServer:
         self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_sock.bind((self.host, self.port))
         self.server_sock.listen(128)
-        self.server_sock.settimeout(0.5)  # 0.5s timeout taaki bar-bar stop_event check ho sake
+        self.server_sock.settimeout(
+            0.5
+        )  # 0.5s timeout taaki bar-bar stop_event check ho sake
         self.port = self.server_sock.getsockname()[1]
 
         # Background listener thread
-        self._listener_thread = threading.Thread(target=self._listener_loop, daemon=True)
+        self._listener_thread = threading.Thread(
+            target=self._listener_loop, daemon=True
+        )
         self._listener_thread.start()
         return self.port
 
@@ -100,8 +104,8 @@ class MultiPeerServer:
 
             # Step 6: Decrypt share payload
             combined = channel.decrypt_message(encrypted_share)
-            x = struct.unpack("B", combined[:1])[0]   # 1st byte = x coordinate
-            share_bytes = combined[1:]                # Remaining bytes = share
+            x = struct.unpack("B", combined[:1])[0]  # 1st byte = x coordinate
+            share_bytes = combined[1:]  # Remaining bytes = share
 
             # Step 7: Thread-safe tareeqe se dictionary update karo
             with self.lock:
