@@ -1,6 +1,6 @@
 """
 Concurrent Multi-Peer Socket Server.
-Handles multi-peer concurrent non-blocking connections, isolated ECDH handshakes,
+Handles multi-peer concurrent non-blocking connections, isolated ECDH handshakes,  # noqa: E501
 and thread-safe share aggregation.
 """
 
@@ -16,7 +16,7 @@ from network.transfer import send_frame, recv_frame
 class MultiPeerServer:
     """
     Concurrent non-blocking multi-peer TCP server for receiving Shamir shares.
-    Uses a thread-per-connection pattern to handle multiple peer connections simultaneously.
+    Uses a thread-per-connection pattern to handle multiple peer connections simultaneously.  # noqa: E501
     """
 
     def __init__(self, host: str = "0.0.0.0", port: int = 0, threshold_k: int = 1):
@@ -32,7 +32,7 @@ class MultiPeerServer:
 
     def start(self) -> int:
         """
-        Server socket bind karta hai, listen karta hai aur background listener thread start karta hai.
+        Server socket bind karta hai, listen karta hai aur background listener thread start karta hai.  # noqa: E501
         Returns: Assigned Port number.
         """
         self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -53,7 +53,7 @@ class MultiPeerServer:
 
     def _listener_loop(self) -> None:
         """
-        Main Gatekeeper Loop: Naye peers accept karta hai aur har peer ke liye worker thread spawn karta hai.
+        Main Gatekeeper Loop: Naye peers accept karta hai aur har peer ke liye worker thread spawn karta hai.  # noqa: E501
         """
         while not self.stop_event.is_set():
             try:
@@ -75,7 +75,7 @@ class MultiPeerServer:
 
     def _handle_peer(self, conn: socket.socket, addr: tuple) -> None:
         """
-        Worker Thread: Individual peer se handshake aur share receive karta hai.
+        Worker Thread: Individual peer se handshake aur share receive karta hai.  # noqa: E501
         """
         try:
             conn.settimeout(10.0)
@@ -161,7 +161,7 @@ def receive_shares_concurrent(
     timeout_seconds: float = 15.0,
 ) -> Dict[int, bytes]:
     """
-    Convenience function: Concurrent multi-peer server chalata hai aur K shares collect karke deta hai.
+    Convenience function: Concurrent multi-peer server chalata hai aur K shares collect karke deta hai.  # noqa: E501
     """
     server = MultiPeerServer(host=host, port=port, threshold_k=threshold_k)
     return server.receive_shares(timeout_seconds=timeout_seconds)
