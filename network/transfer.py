@@ -3,8 +3,8 @@ Network Transfer Layer.
 Handles TCP connection management, message serialization, and framing.
 
 Mentee D Deliverables:
-- Weeks 1-2: Implement basic length-prefixed TCP socket framing to send and receive raw byte packets.
-- Weeks 3-4: Complete TCP transmission wrapper, handling partial reads/writes and unexpected connection drops.
+- Weeks 1-2: Implement basic length-prefixed TCP socket framing to send and receive raw byte packets.  # noqa: E501
+- Weeks 3-4: Complete TCP transmission wrapper, handling partial reads/writes and unexpected connection drops.  # noqa: E501
 """
 
 import base64
@@ -17,7 +17,7 @@ DEFAULT_TIMEOUT = 5.0  # seconds to wait when connecting to a peer
 
 
 class FramingError(Exception):
-    """Raised when a socket frame is malformed or the connection drops mid-frame."""
+    """Raised when a socket frame is malformed or the connection drops mid-frame."""  # noqa: E501
 
 
 # ---------------------------------------------------------------------------
@@ -38,7 +38,7 @@ def send_message(sock: socket.socket, payload: dict) -> None:
 
 
 def _recv_exact(sock: socket.socket, num_bytes: int) -> bytes:
-    """Read exactly num_bytes from sock, looping over recv() until satisfied."""
+    """Read exactly num_bytes from sock, looping over recv() until satisfied."""  # noqa: E501
     chunks = []
     remaining = num_bytes
     while remaining > 0:
@@ -139,14 +139,17 @@ def _deserialize_share(payload: dict) -> tuple[int, bytes]:
 
 def receive_share(sock: socket.socket) -> tuple[int, bytes]:
     """
-    Read one framed share message from sock and return the (x, share_bytes) tuple.
+    Read one framed share message from sock and return the (x, share_bytes) tuple.  # noqa: E501
     """
     payload = receive_message(sock)
     return _deserialize_share(payload)
 
 
 def send_share(
-    peer_host: str, peer_port: int, share: tuple, timeout: float = DEFAULT_TIMEOUT
+    peer_host: str,
+    peer_port: int,
+    share: tuple,
+    timeout: float = DEFAULT_TIMEOUT,
 ) -> None:
     """
     Open a TCP connection to a single peer and send them their one share,
@@ -231,7 +234,7 @@ def send_encrypted_share(
 
 def receive_encrypted_share(conn: socket.socket) -> tuple[int, bytes]:
     """
-    Perform X25519 handshake and receive an AES-256-GCM encrypted share over an established connection.
+    Perform X25519 handshake and receive an AES-256-GCM encrypted share over an established connection.  # noqa: E501
     Supports both encrypted handshake and fallback direct share payload.
     """
     from crypto.channel import SecureChannel

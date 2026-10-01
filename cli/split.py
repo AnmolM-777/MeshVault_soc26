@@ -57,7 +57,7 @@ def execute_split(
 ) -> List[Tuple[int, bytes]]:
     """
     Executes the secret split operation.
-    Splits the secret into shares_n shares with threshold_k, discovers or connects
+    Splits the secret into shares_n shares with threshold_k, discovers or connects  # noqa: E501
     to network peers, and securely transfers shares to peers.
 
     Returns the generated shares.
@@ -74,11 +74,11 @@ def execute_split(
 
     if not (1 <= threshold_k <= shares_n <= 255):
         raise ValueError(
-            f"Invalid threshold/shares configuration: require 1 <= threshold ({threshold_k}) <= shares ({shares_n}) <= 255"
+            f"Invalid threshold/shares configuration: require 1 <= threshold ({threshold_k}) <= shares ({shares_n}) <= 255"  # noqa: E501
         )
 
     print(
-        f"Splitting secret ({len(secret_bytes)} bytes) into {shares_n} shares (Threshold: {threshold_k})..."
+        f"Splitting secret ({len(secret_bytes)} bytes) into {shares_n} shares (Threshold: {threshold_k})..."  # noqa: E501
     )
     shares = split_secret(secret_bytes, n=shares_n, k=threshold_k)
 

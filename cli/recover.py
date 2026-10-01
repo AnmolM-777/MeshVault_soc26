@@ -89,9 +89,7 @@ def execute_recover(
                 break
             try:
                 conn, _ = server_sock.accept()
-                t = threading.Thread(
-                    target=handle_client, args=(conn,), daemon=True
-                )
+                t = threading.Thread(target=handle_client, args=(conn,), daemon=True)
                 t.start()
                 threads.append(t)
             except socket.timeout:
@@ -111,12 +109,9 @@ def execute_recover(
         )
 
     print(
-        f"[+] Successfully collected {len(shares_dict)}/{threshold_k} "
-        "unique shares."
+        f"[+] Successfully collected {len(shares_dict)}/{threshold_k} " "unique shares."
     )
     print("[*] Reconstructing secret from collected shares...")
 
-    shares_list: List[Tuple[int, bytes]] = list(shares_dict.items())[
-        :threshold_k
-    ]
+    shares_list: List[Tuple[int, bytes]] = list(shares_dict.items())[:threshold_k]
     return reconstruct_secret(shares_list)

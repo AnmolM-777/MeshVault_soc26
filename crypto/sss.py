@@ -66,7 +66,7 @@ def split_secret(secret: bytes, n: int, k: int) -> list[tuple[int, bytes]]:
 
 
 def _lagrange_interpolate_zero(points: list[tuple[int, int]]) -> int:
-    """Lagrange interpolation of a set of (x, y) points, evaluated at x=0, in GF(256)."""
+    """Lagrange interpolation of a set of (x, y) points, evaluated at x=0, in GF(256)."""  # noqa: E501
     result = 0
     for i, (x_i, y_i) in enumerate(points):
         numerator = 1

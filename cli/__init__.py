@@ -1,6 +1,6 @@
 """
 MeshVault CLI Package.
-Provides high-level commands for splitting secrets and recovering them from peers.
+Provides high-level commands for splitting secrets and recovering them from peers.  # noqa: E501
 """
 
 from cli.split import execute_split

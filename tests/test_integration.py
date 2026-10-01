@@ -9,7 +9,7 @@ from network.transfer import receive_encrypted_share, send_encrypted_share
 
 
 def _peer_listener(port_holder, received_shares, ready_event, stop_event):
-    """Mock peer listener node that accepts one connection, performs handshake, and receives encrypted share."""
+    """Mock peer listener node that accepts one connection, performs handshake, and receives encrypted share."""  # noqa: E501
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(("127.0.0.1", 0))
@@ -33,7 +33,7 @@ def _peer_listener(port_holder, received_shares, ready_event, stop_event):
 
 
 def test_e2e_split_to_multiple_peers():
-    """Test splitting a secret and securely sending shares to 3 distinct mock peer nodes."""
+    """Test splitting a secret and securely sending shares to 3 distinct mock peer nodes."""  # noqa: E501
     secret = b"Antigravity-MeshVault-E2E-Secret-Key-2026!"
     threshold_k = 2
     shares_n = 3
@@ -83,7 +83,7 @@ def test_e2e_split_to_multiple_peers():
 
 
 def test_e2e_recover_flow():
-    """Test execute_recover listening and receiving encrypted shares from client peers."""
+    """Test execute_recover listening and receiving encrypted shares from client peers."""  # noqa: E501
     secret = b"Classified-Data-Recovery-Vector-99"
     threshold_k = 3
     shares_n = 4
@@ -130,7 +130,7 @@ def test_e2e_recover_flow():
 def test_e2e_split_invalid_threshold_zero():
     """
     Simulates: Calling execute_split with threshold_k = 0.
-    Why fail: A threshold of 0 is mathematically invalid for Shamir's Secret Sharing.
+    Why fail: A threshold of 0 is mathematically invalid for Shamir's Secret Sharing.  # noqa: E501
     Expected: Should raise ValueError from execute_split validation.
     """
     secret = b"Test-Secret"
@@ -141,7 +141,7 @@ def test_e2e_split_invalid_threshold_zero():
 def test_e2e_split_threshold_greater_than_shares():
     """
     Simulates: Calling execute_split with k > n.
-    Why fail: Cannot require more shares for recovery than the total number of shares generated.
+    Why fail: Cannot require more shares for recovery than the total number of shares generated.  # noqa: E501
     Expected: Should raise ValueError from execute_split validation.
     """
     secret = b"Test-Secret"
@@ -151,8 +151,8 @@ def test_e2e_split_threshold_greater_than_shares():
 
 def test_e2e_recover_insufficient_shares():
     """
-    Simulates: Providing fewer than the required threshold_k shares to recovery.
-    Why fail: execute_recover waits for k shares. If timeout occurs before k shares, it raises socket.timeout.
+    Simulates: Providing fewer than the required threshold_k shares to recovery.  # noqa: E501
+    Why fail: execute_recover waits for k shares. If timeout occurs before k shares, it raises socket.timeout.  # noqa: E501
     Expected: Raises socket.timeout exception.
     """
     from crypto.sss import split_secret
@@ -199,10 +199,10 @@ def test_e2e_recover_insufficient_shares():
 
 def test_e2e_recover_corrupted_share():
     """
-    Simulates: Modifying the share data before sending it to the recovery process.
-    Why fail: The current SSS implementation does not embed integrity checks (hashes/MACs) for the reconstructed secret.
-              Therefore, it reconstructs a garbage secret rather than explicitly failing.
-    Expected: This test exposes that a corrupted share leads to a silently corrupted reconstructed secret.
+    Simulates: Modifying the share data before sending it to the recovery process.  # noqa: E501
+    Why fail: The current SSS implementation does not embed integrity checks (hashes/MACs) for the reconstructed secret.  # noqa: E501
+              Therefore, it reconstructs a garbage secret rather than explicitly failing.  # noqa: E501
+    Expected: This test exposes that a corrupted share leads to a silently corrupted reconstructed secret.  # noqa: E501
     """
     from crypto.sss import split_secret
 
@@ -260,8 +260,8 @@ def test_e2e_split_unreachable_peer():
     """
     Simulates: split operation where one specified peer is unreachable.
     Why fail: Connection attempts should fail for that peer.
-    Expected: execute_split should continue and attempt to send to available peers. It will not raise,
-              but handles the unreachable peer according to existing error-handling (prints error).
+    Expected: execute_split should continue and attempt to send to available peers. It will not raise,  # noqa: E501
+              but handles the unreachable peer according to existing error-handling (prints error).  # noqa: E501
     """
     temp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     temp_sock.bind(("127.0.0.1", 0))
@@ -283,7 +283,11 @@ def test_e2e_split_unreachable_peer():
         peer_threads.append(t)
         ready_events[i].wait(timeout=2.0)
 
-    peers = [("127.0.0.1", ports[0]), ("127.0.0.1", ports[1]), ("127.0.0.1", dead_port)]
+    peers = [
+        ("127.0.0.1", ports[0]),
+        ("127.0.0.1", ports[1]),
+        ("127.0.0.1", dead_port),
+    ]
 
     secret = b"Unreachable-Peer-Test"
     shares = execute_split(
@@ -300,9 +304,9 @@ def test_e2e_split_unreachable_peer():
 
 def test_e2e_recover_peer_disconnect():
     """
-    Simulates: A peer connecting to the recovery listener but disconnecting before sending data.
-    Why fail: The listener expects an encrypted share structure. A sudden close raises an error.
-    Expected: The listener catches the exception, prints it, and continues waiting. Eventually times out.
+    Simulates: A peer connecting to the recovery listener but disconnecting before sending data.  # noqa: E501
+    Why fail: The listener expects an encrypted share structure. A sudden close raises an error.  # noqa: E501
+    Expected: The listener catches the exception, prints it, and continues waiting. Eventually times out.  # noqa: E501
     """
     threshold_k = 2
     temp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -342,9 +346,9 @@ def test_e2e_recover_peer_disconnect():
 
 def test_e2e_recover_mismatched_shares():
     """
-    Simulates: Trying to recover a secret using shares from two different secrets.
-    Why fail: The polynomials won't align, so the reconstructed secret will be garbage.
-    Expected: Reconstructs an incorrect secret since no integrity checks exist at this layer.
+    Simulates: Trying to recover a secret using shares from two different secrets.  # noqa: E501
+    Why fail: The polynomials won't align, so the reconstructed secret will be garbage.  # noqa: E501
+    Expected: Reconstructs an incorrect secret since no integrity checks exist at this layer.  # noqa: E501
     """
     from crypto.sss import split_secret, reconstruct_secret
 
@@ -362,7 +366,7 @@ def test_e2e_split_invalid_peer_address(capsys):
     """
     Simulates: Calling execute_split with a syntactically invalid peer address.
     Why fail: socket.create_connection cannot resolve the address.
-    Expected: execute_split catches the socket.gaierror, prints the failure, and returns the generated shares.
+    Expected: execute_split catches the socket.gaierror, prints the failure, and returns the generated shares.  # noqa: E501
     """
     secret = b"Invalid-Address-Test"
     peers = [("invalid.nonexistent.local", 12345)]
@@ -378,9 +382,9 @@ def test_e2e_split_invalid_peer_address(capsys):
 
 def test_e2e_tampered_encrypted_share():
     """
-    Simulates: Intercepting and modifying the ciphertext of an encrypted share during transit.
+    Simulates: Intercepting and modifying the ciphertext of an encrypted share during transit.  # noqa: E501
     Why fail: AES-GCM tag validation will fail during decrypt_message.
-    Expected: InvalidTag is caught during decryption, causing framing error. Listener loops and times out.
+    Expected: InvalidTag is caught during decryption, causing framing error. Listener loops and times out.  # noqa: E501
     """
     from crypto.channel import SecureChannel
     from network.transfer import send_message, receive_message
@@ -429,7 +433,10 @@ def test_e2e_tampered_encrypted_share():
     peer_pub = base64.b64decode(resp["public_key"])
     client_channel.compute_shared_secret(peer_pub)
 
-    share_payload = {"x": 1, "data": base64.b64encode(b"secret").decode("ascii")}
+    share_payload = {
+        "x": 1,
+        "data": base64.b64encode(b"secret").decode("ascii"),
+    }
     encrypted_bytes = client_channel.encrypt_message(
         json.dumps(share_payload).encode("utf-8")
     )

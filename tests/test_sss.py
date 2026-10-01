@@ -1,6 +1,11 @@
 import itertools
 import pytest
-from crypto.sss import split_secret, reconstruct_secret, gf256_add, gf256_multiply
+from crypto.sss import (
+    split_secret,
+    reconstruct_secret,
+    gf256_add,
+    gf256_multiply,
+)
 
 
 def test_sss_import():

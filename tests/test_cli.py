@@ -48,7 +48,17 @@ def test_cli_split_parser():
 def test_cli_recover_parser():
     parser = build_parser()
     args = parser.parse_args(
-        ["recover", "-k", "3", "-p", "6000", "--host", "127.0.0.1", "-o", "out.txt"]
+        [
+            "recover",
+            "-k",
+            "3",
+            "-p",
+            "6000",
+            "--host",
+            "127.0.0.1",
+            "-o",
+            "out.txt",
+        ]
     )
     assert args.command == "recover"
     assert args.threshold == 3
@@ -63,7 +73,17 @@ def test_cli_split_main_execution(tmp_path):
 
     # Run split with file
     ret = main(
-        ["split", "-k", "2", "-n", "3", "-f", str(secret_file), "--timeout", "0.1"]
+        [
+            "split",
+            "-k",
+            "2",
+            "-n",
+            "3",
+            "-f",
+            str(secret_file),
+            "--timeout",
+            "0.1",
+        ]
     )
     assert ret == 0
 

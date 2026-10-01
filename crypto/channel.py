@@ -37,7 +37,7 @@ class SecureChannel:
         """
         if self.private_key is None:
             raise ValueError(
-                "Local key pair must be generated before computing shared secret."
+                "Local key pair must be generated before computing shared secret."  # noqa: E501
             )
 
         if (

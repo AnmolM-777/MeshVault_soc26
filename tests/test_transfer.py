@@ -144,7 +144,10 @@ def test_send_shares_requires_matching_lengths():
 def test_deserialize_share_valid_and_invalid():
     from network.transfer import _deserialize_share
 
-    valid = {"x": 2, "data": base64.b64encode(b"test-share-bytes").decode("ascii")}
+    valid = {
+        "x": 2,
+        "data": base64.b64encode(b"test-share-bytes").decode("ascii"),
+    }
     assert _deserialize_share(valid) == (2, b"test-share-bytes")
 
     with pytest.raises(ValueError):

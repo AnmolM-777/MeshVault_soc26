@@ -98,7 +98,7 @@ def _run_one_shot_server(host, port_holder, received_holder, ready_event):
 
 
 def _peer_listener(port_holder, received_shares, ready_event, stop_event):
-    """Mock peer listener node that accepts one connection, performs handshake, and receives encrypted share."""
+    """Mock peer listener node that accepts one connection, performs handshake, and receives encrypted share."""  # noqa: E501
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(("127.0.0.1", 0))
@@ -657,7 +657,10 @@ def test_send_shares_requires_matching_lengths():
 
 
 def test_deserialize_share_valid_and_invalid():
-    valid = {"x": 2, "data": base64.b64encode(b"test-share-bytes").decode("ascii")}
+    valid = {
+        "x": 2,
+        "data": base64.b64encode(b"test-share-bytes").decode("ascii"),
+    }
     assert _deserialize_share(valid) == (2, b"test-share-bytes")
 
     with pytest.raises(ValueError):
@@ -803,7 +806,17 @@ def test_cli_split_parser():
 def test_cli_recover_parser():
     parser = build_parser()
     args = parser.parse_args(
-        ["recover", "-k", "3", "-p", "6000", "--host", "127.0.0.1", "-o", "out.txt"]
+        [
+            "recover",
+            "-k",
+            "3",
+            "-p",
+            "6000",
+            "--host",
+            "127.0.0.1",
+            "-o",
+            "out.txt",
+        ]
     )
     assert args.command == "recover"
     assert args.threshold == 3
@@ -817,7 +830,17 @@ def test_cli_split_main_execution(tmp_path):
     secret_file.write_text("classified-top-secret")
 
     ret = main(
-        ["split", "-k", "2", "-n", "3", "-f", str(secret_file), "--timeout", "0.1"]
+        [
+            "split",
+            "-k",
+            "2",
+            "-n",
+            "3",
+            "-f",
+            str(secret_file),
+            "--timeout",
+            "0.1",
+        ]
     )
     assert ret == 0
 
@@ -833,7 +856,7 @@ def test_cli_split_invalid_k_n():
 
 
 def test_e2e_split_to_multiple_peers():
-    """Test splitting a secret and securely sending shares to 3 distinct mock peer nodes."""
+    """Test splitting a secret and securely sending shares to 3 distinct mock peer nodes."""  # noqa: E501
     secret = b"Antigravity-MeshVault-E2E-Secret-Key-2026!"
     threshold_k = 2
     shares_n = 3
@@ -883,7 +906,7 @@ def test_e2e_split_to_multiple_peers():
 
 
 def test_e2e_recover_flow():
-    """Test execute_recover listening and receiving encrypted shares from client peers."""
+    """Test execute_recover listening and receiving encrypted shares from client peers."""  # noqa: E501
     secret = b"Classified-Data-Recovery-Vector-99"
     threshold_k = 3
     shares_n = 4

@@ -17,7 +17,7 @@ def _get_local_ip() -> str:
 
 
 class _MeshVaultListener(ServiceListener):
-    """Internal Zeroconf listener collecting discovered MeshVault service announcements."""
+    """Internal Zeroconf listener collecting discovered MeshVault service announcements."""  # noqa: E501
 
     def __init__(self):
         self.discovered_infos: list[ServiceInfo] = []
@@ -38,7 +38,7 @@ class _MeshVaultListener(ServiceListener):
 
 class PeerDiscovery:
     """
-    Registers the local service and browses for remote MeshVault peers via mDNS/Zeroconf.
+    Registers the local service and browses for remote MeshVault peers via mDNS/Zeroconf.  # noqa: E501
     """
 
     def __init__(self, service_type: str = "_meshvault._tcp.local."):

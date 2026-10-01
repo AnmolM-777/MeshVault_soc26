@@ -15,7 +15,7 @@ def _parse_peer(peer_str: str) -> tuple[str, int]:
     parts = peer_str.strip().rsplit(":", 1)
     if len(parts) != 2:
         raise argparse.ArgumentTypeError(
-            f"Invalid peer format '{peer_str}'. Expected host:port (e.g. 192.168.1.50:5000)"
+            f"Invalid peer format '{peer_str}'. Expected host:port (e.g. 192.168.1.50:5000)"  # noqa: E501
         )
     host, port_str = parts
     try:
@@ -24,7 +24,7 @@ def _parse_peer(peer_str: str) -> tuple[str, int]:
             raise ValueError()
     except ValueError:
         raise argparse.ArgumentTypeError(
-            f"Invalid port '{port_str}' in peer '{peer_str}'. Port must be an integer between 1 and 65535."
+            f"Invalid port '{port_str}' in peer '{peer_str}'. Port must be an integer between 1 and 65535."  # noqa: E501
         )
     return (host, port)
 
@@ -32,7 +32,7 @@ def _parse_peer(peer_str: str) -> tuple[str, int]:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="meshvault",
-        description="MeshVault: Encrypted P2P Secret Sharing over LAN — No Server, No Cloud, No Trust Required.",
+        description="MeshVault: Encrypted P2P Secret Sharing over LAN — No Server, No Cloud, No Trust Required.",  # noqa: E501
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -69,13 +69,13 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         type=_parse_peer,
         dest="peers",
-        help="Explicit peer address in host:port format (can specify multiple times)",
+        help="Explicit peer address in host:port format (can specify multiple times)",  # noqa: E501
     )
     split_parser.add_argument(
         "--timeout",
         type=float,
         default=5.0,
-        help="Timeout for peer discovery and socket connections in seconds (default: 5.0)",
+        help="Timeout for peer discovery and socket connections in seconds (default: 5.0)",  # noqa: E501
     )
 
     # Recover sub-command
@@ -94,7 +94,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--port",
         type=int,
         default=5000,
-        help="Local port to listen on for incoming peer shares (default: 5000)",
+        help="Local port to listen on for incoming peer shares (default: 5000)",  # noqa: E501
     )
     recover_parser.add_argument(
         "--host",
@@ -106,13 +106,13 @@ def build_parser() -> argparse.ArgumentParser:
         "-o",
         "--output",
         type=str,
-        help="File path to write recovered secret to (default: prints to stdout)",
+        help="File path to write recovered secret to (default: prints to stdout)",  # noqa: E501
     )
     recover_parser.add_argument(
         "--timeout",
         type=float,
         default=None,
-        help="Socket timeout in seconds (default: wait indefinitely until K shares arrive)",
+        help="Socket timeout in seconds (default: wait indefinitely until K shares arrive)",  # noqa: E501
     )
 
     return parser
@@ -126,7 +126,10 @@ def _handle_split(args: argparse.Namespace) -> int:
             with open(args.file, "rb") as f:
                 secret_bytes = f.read()
         except OSError as e:
-            print(f"Error reading secret file '{args.file}': {e}", file=sys.stderr)
+            print(
+                f"Error reading secret file '{args.file}': {e}",
+                file=sys.stderr,
+            )
             return 1
     elif args.secret is not None:
         secret_bytes = args.secret.encode("utf-8")
@@ -185,7 +188,9 @@ def _handle_recover(args: argparse.Namespace) -> int:
                 text = recovered_bytes.decode("utf-8")
                 print(f"\n[***] Recovered Secret: {text}")
             except UnicodeDecodeError:
-                print(f"\n[***] Recovered Binary Secret (Hex): {recovered_bytes.hex()}")
+                print(
+                    f"\n[***] Recovered Binary Secret (Hex): {recovered_bytes.hex()}"  # noqa: E501
+                )
         return 0
     except Exception as e:
         print(f"Error during recover: {e}", file=sys.stderr)
