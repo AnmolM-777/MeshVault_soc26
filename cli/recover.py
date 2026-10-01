@@ -48,7 +48,9 @@ def execute_recover(
     )
 
     # Step 1: Start transfer2's Multi-Peer Concurrent Server
-    server = MultiPeerServer(host=listen_host, port=listen_port, threshold_k=threshold_k)
+    server = MultiPeerServer(
+        host=listen_host, port=listen_port, threshold_k=threshold_k
+    )
     active_port = server.start()
 
     # Step 2: Advertise on LAN via mDNS so peers can auto-discover this node
@@ -61,9 +63,13 @@ def execute_recover(
                 port=active_port,
                 metadata={"role": "recover", "k": str(threshold_k)},
             )
-            print(f"[*] mDNS Service advertised: 'meshvault-recovery' on port {active_port}")
+            print(
+                f"[*] mDNS Service advertised: 'meshvault-recovery' on port {active_port}"
+            )
         except Exception as e:
-            print(f"[!] Warning: mDNS advertisement failed ({e}), continuing with TCP listener.")
+            print(
+                f"[!] Warning: mDNS advertisement failed ({e}), continuing with TCP listener."
+            )
 
     # Step 3: Concurrently collect K shares (transfer2 handles ECDH handshake + AES decrypt per peer)
     try:
