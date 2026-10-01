@@ -15,6 +15,50 @@ from network.discovery import PeerDiscovery
 from network.transfer import receive_encrypted_share
 
 
+def _handle_client(
+    conn: socket.socket,
+    shares_dict: dict,
+    lock: threading.Lock,
+    stop_event: threading.Event,
+    threshold_k: int,
+) -> None:
+    try:
+        conn.settimeout(10.0)
+        share = receive_encrypted_share(conn)
+        with lock:
+            shares_dict[share[0]] = share[1]
+            if len(shares_dict) >= threshold_k:
+                stop_event.set()
+    except Exception:
+        pass
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _advertise_mdns(active_port: int, threshold_k: int) -> Optional[PeerDiscovery]:
+    try:
+        pd = PeerDiscovery()
+        pd.advertise_service(
+            name="meshvault-recovery",
+            port=active_port,
+            metadata={"role": "recover", "k": str(threshold_k)},
+        )
+        print(
+            f"[*] mDNS Service advertised: 'meshvault-recovery' on "
+            f"port {active_port}"
+        )
+        return pd
+    except Exception as e:
+        print(
+            f"[!] Warning: mDNS advertisement failed ({e}), "
+            "continuing with TCP listener."
+        )
+        return None
+
+
 def execute_recover(
     threshold_k: int,
     listen_port: int = 5000,
@@ -42,54 +86,25 @@ def execute_recover(
     server_sock.settimeout(0.5)
     active_port = server_sock.getsockname()[1]
 
-    pd: Optional[PeerDiscovery] = None
-    if advertise:
-        try:
-            pd = PeerDiscovery()
-            pd.advertise_service(
-                name="meshvault-recovery",
-                port=active_port,
-                metadata={"role": "recover", "k": str(threshold_k)},
-            )
-            print(
-                f"[*] mDNS Service advertised: 'meshvault-recovery' on "
-                f"port {active_port}"
-            )
-        except Exception as e:
-            print(
-                f"[!] Warning: mDNS advertisement failed ({e}), "
-                "continuing with TCP listener."
-            )
+    pd = _advertise_mdns(active_port, threshold_k) if advertise else None
 
     shares_dict = {}
     lock = threading.Lock()
     stop_event = threading.Event()
     threads = []
-
-    def handle_client(conn: socket.socket) -> None:
-        try:
-            conn.settimeout(10.0)
-            share = receive_encrypted_share(conn)
-            with lock:
-                shares_dict[share[0]] = share[1]
-                if len(shares_dict) >= threshold_k:
-                    stop_event.set()
-        except Exception:
-            pass
-        finally:
-            try:
-                conn.close()
-            except Exception:
-                pass
-
     start_time = time.time()
+
     try:
         while not stop_event.is_set():
             if time.time() - start_time >= timeout:
                 break
             try:
                 conn, _ = server_sock.accept()
-                t = threading.Thread(target=handle_client, args=(conn,), daemon=True)
+                t = threading.Thread(
+                    target=_handle_client,
+                    args=(conn, shares_dict, lock, stop_event, threshold_k),
+                    daemon=True,
+                )
                 t.start()
                 threads.append(t)
             except socket.timeout:
