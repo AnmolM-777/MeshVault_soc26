@@ -7,6 +7,7 @@ Mentee D Deliverables:
 - Weeks 3-4: Complete TCP transmission wrapper, handling partial reads/writes and unexpected connection drops.  # noqa: E501
 """
 
+from __future__ import annotations
 import base64
 import json
 import socket
